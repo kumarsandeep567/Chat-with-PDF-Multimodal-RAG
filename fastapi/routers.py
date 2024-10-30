@@ -1,9 +1,19 @@
 import logging
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException, status, Depends
-from models import RegisterUser, LoginUser, ExploreDocs
+from models import RegisterUser, LoginUser, ExploreDocs, LoadDocument
 from fastapi.responses import JSONResponse
-from services import check_if_user_already_exists, register_user, login_user, verify_token, explore_documents, load_document
+
+# Importing all the necessary functions
+from services import          \
+check_if_user_already_exists, \
+register_user,                \
+login_user,                   \
+verify_token,                 \
+explore_documents,            \
+load_document,                \
+download_files_from_s3,       \
+generate_summary
 
 router = APIRouter()
 
@@ -106,5 +116,25 @@ def load_docs(
     logger.info("FASTAPI Routers - load_docs = Route for fetching selected document")
     logger.info(f"FASTAPI Routers - load_docs = GET - /load_docs/{document_id} request received")
 
-    # Loading the selected document
+    logger.info(f"FASTAPI Routers - load_docs = Downloading the files present in s3 bucket - {document_id} folder")
+    download_files_from_s3(document_id)
+    logger.info(f"FASTAPI Routers - load_docs = Loading the entire document with id = {document_id}")
     return load_document(document_id)
+
+# Route for generating summary 
+@router.get("/summary/{document_id}",
+        response_class = JSONResponse,
+        responses = {
+            401: {'description': 'Invalid or expired token'},
+            402: {'description': 'Insufficient permissions'},
+            403: {'description': 'Returns all available data about a task id'}
+        }
+    )
+def doc_summary(
+    document_id: str,
+    token: str = Depends(verify_token)
+) -> JSONResponse:
+    
+    logger.info(f"FASTAPI Routers - doc_summary = Generating summary for the document = {document_id}")
+    logger.info(f"FASTAPI Routers - load_docs = GET - /{document_id}/summary request received")
+    return generate_summary(document_id)

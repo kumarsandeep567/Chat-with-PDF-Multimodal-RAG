@@ -1,10 +1,13 @@
 import os
 import jwt
 import hmac
+import boto3
+import PyPDF2
 import hashlib
 import logging
 import tiktoken
 import datetime
+from openai import OpenAI
 from dotenv import load_dotenv
 from typing import Any
 from datetime import timezone, timedelta
@@ -484,3 +487,140 @@ def load_document(document_id):
             'type'      : "string",
             'message'   : "Could not fetch the user selected document. Something went wrong."
         })
+    
+def download_files_from_s3(document_id):
+    logger.info(f"FASTAPI Services - download_files_from_s3() - Downloading files from s3 bucket to local")
+    logger.info(f"FASTAPI Services - download_files_from_s3() - Creating S3 Client")
+
+    # Create S3 Client
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    )
+
+    logger.info(f"FASTAPI Services - download_files_from_s3() - S3 Client created")
+
+    bucket_name = os.getenv("BUCKET_NAME")
+    s3_folder_path = f"{bucket_name}/{document_id}"
+    local_dir = os.path.join(os.getcwd(), 'downloads', document_id)
+
+    if not os.path.exists(local_dir):
+        logger.info(f"FASTAPI Services - download_files_from_s3() - Creating local directory to store the files in {document_id}")
+        os.makedirs(local_dir)
+
+    try:
+        response = s3_client.list_objects_v2(Bucket = bucket_name, Prefix = document_id)
+        logger.info(f"FASTAPI Services - download_files_from_s3() - Listed all files in {document_id}")
+
+        if 'Contents' not in response:
+            logger.info(f"FASTAPI Services - download_files_from_s3() - No files found in specified folder path: s3://{bucket_name}/{s3_folder_path}")
+            return JSONResponse({
+                'status' : 404,
+                'type'   : 'string',
+                'message' : 'No files found in the specified folder path'
+            })
+         # s3://publications-info/document_id/
+        for obj in response['Contents']:
+            file_key = obj['Key']
+            file_name = os.path.join(local_dir, os.path.basename(file_key))
+            logger.info(f"FASTAPI Services - download_files_from_s3() - Downloading files")
+            s3_client.download_file(bucket_name, file_key, file_name)
+            logger.info(f"FASTAPI Services - download_files_from_s3() - Downloaded {file_name}")
+        
+        return JSONResponse({
+            'status' : 200,
+            'type' : 'string',
+            'message' : 'Files downloaded successfully'
+        })
+              
+    except Exception as e:
+        logger.error(f"FASTAPI Services Error - download_files_from_s3() encountered an error: {e}")
+        return JSONResponse({
+            'status' : 500,
+            'type': 'string',
+            'message' : 'An error occured while downloading files from S3'
+        })
+    
+def extract_text_from_document(document_id):
+    logger.info(f"FASTAPI Services - extract_text_from_document() - Extracting text from document with id = {document_id}")
+
+    pdf_dir = os.path.join(os.getcwd(), 'downloads', str(document_id))
+
+    if not os.path.exists(pdf_dir):
+        logger.error(f"FASTAPI Services Error - extract_text_from_document() - Directory {pdf_dir} does not exist")
+        return None
+    
+    pdf_file = None
+    for file in os.listdir(pdf_dir):
+        if file.endswith('.pdf'):
+            pdf_file = os.path.join(pdf_dir, file)
+            break
+    
+    if pdf_file is None:
+        logger.error(f"FASTAPI Services Error - extract_text_from_document() - No PDF file found in directory {pdf_dir} ")
+        return None
+    
+    try:
+        logger.info(f"FASTAPI Services - extract_text_from_document() - Extracting text from pdf file = {pdf_file}")
+        text = ""
+        with open(pdf_file, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            for page in reader.pages:
+                text += page.extract_text()
+        print("Text extracted for the entire PDF")
+        logger.info(f"FASTAPI Services - extract_text_from_document() - Text extracted for the entire PDF file = {pdf_file}")
+        return text.strip()
+    
+    except Exception as e:
+        logger.error(f"FASTAPI Services Error - extract_text_from_document() encountered an error: {e}")
+
+def generate_summary(document_id):
+    logger.info(f"FASTAPI Services - generate_summary() - Generating summary for document {document_id}")
+
+    # Extracting text from the document pdf file
+    text = extract_text_from_document(document_id)
+    logger.info(f"FASTAPI Services - generate_summary() - {document_id} - Text extracted and ready for summarization")
+
+    try:
+        # Creating OpenAI client
+        client = OpenAI(
+            base_url = os.getenv("NVIDIA_URL_SUMMARY"),
+            api_key = os.getenv("NVIDIA_API_KEY_SUMMARY")
+        )
+        logger.info(f"FASTAPI Services - generate_summary() - OpenAI Client created successfully")
+
+        message = [{'role': 'user', 'content' : f"Conclude the summary in 3-5 sensible complete sentences for text, no extra context needed: \n {text}"}]
+        logger.info(f"FASTAPI Services - generate_summary() - Message/Prompt created successfully")
+
+        completion = client.chat.completions.create(
+            model = "meta/llama-3.1-405b-instruct",
+            messages = message,
+            temperature = 0.2, 
+            top_p = 0.7,
+            max_tokens = 150,
+            stream = True
+        )
+        logger.info(f"FASTAPI Services - generate_summary() - NVIDIA model defined successfully")
+
+        summary = ""
+        for chunk in completion:
+            if chunk.choices[0].delta.content is not None:
+                logger.info(f"FASTAPI Services - generate_summary() - Collecting generated summary")
+                summary += chunk.choices[0].delta.content
+        logger.info(f"FASTAPI Services - generate_summary() - {document_id} - Summary generated successfully")
+        return JSONResponse({
+            'status' : 200,
+            'type' : 'text',
+            'message' : summary
+        })
+
+    except Exception as e:
+        logger.error(f"FASTAPI Services Error - generate_summary() encountered an error: {e}")
+        return JSONResponse({
+            'status' : 500,
+            'type' : 'string',
+            'message' : 'Error while generating summary for the pdf document'
+        })
+
+

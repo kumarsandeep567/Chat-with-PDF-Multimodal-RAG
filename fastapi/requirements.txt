@@ -1,6 +1,8 @@
 PyJWT
+boto3
 pandas
 openai
+PyPDF2
 pydantic
 tiktoken
 python-dotenv
