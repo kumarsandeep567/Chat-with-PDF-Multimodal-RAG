@@ -43,3 +43,16 @@ class ExploreDocs(BaseModel):
 
 class LoadDocument(BaseModel):
     document_id: str
+
+class SourceType(str, Enum):
+    full_text = "full_text"
+    report = "report"
+
+class PromptType(str, Enum):
+    report = "report"
+    default = "default"
+
+class UserPrompts(BaseModel):
+    question: str
+    prompt_type: PromptType
+    source : SourceType

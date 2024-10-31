@@ -9,3 +9,17 @@ python-dotenv
 fastapi[standard]
 python-multipart
 snowflake-connector-python
+
+langchain
+openai
+langchain-chroma
+langchain-openai
+langchain-experimental
+unstructured[all-docs]
+pillow
+pydantic
+lxml
+matplotlib
+chromadb
+tiktoken
+Unidecode

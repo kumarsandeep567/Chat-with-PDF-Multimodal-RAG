@@ -1,7 +1,7 @@
 import logging
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException, status, Depends
-from models import RegisterUser, LoginUser, ExploreDocs, LoadDocument
+from models import RegisterUser, LoginUser, ExploreDocs, LoadDocument, UserPrompts
 from fastapi.responses import JSONResponse
 
 # Importing all the necessary functions
@@ -13,7 +13,8 @@ verify_token,                 \
 explore_documents,            \
 load_document,                \
 download_files_from_s3,       \
-generate_summary
+generate_summary,             \
+invoke_pipeline
 
 router = APIRouter()
 
@@ -136,5 +137,24 @@ def doc_summary(
 ) -> JSONResponse:
     
     logger.info(f"FASTAPI Routers - doc_summary = Generating summary for the document = {document_id}")
-    logger.info(f"FASTAPI Routers - load_docs = GET - /{document_id}/summary request received")
+    logger.info(f"FASTAPI Routers - doc_summary = GET - /summary/{document_id} request received")
     return generate_summary(document_id)
+
+# Route for RAG implementation
+@router.post("/chatbot/{document_id}",
+        response_class=JSONResponse,
+        responses={
+            401: {'description': 'Invalid or expired token'},
+            402: {'description': 'Insufficient permissions'},
+            403: {'description': 'Returns all available data about a task id'}
+        }
+    )
+def chatbot(
+    prompt: UserPrompts,
+    document_id: str,
+    token: str = Depends(verify_token)
+) -> JSONResponse:
+    logger.info(f"FASTAPI Routers - chatbot = Generating summary for the document = {document_id}")
+    logger.info(f"FASTAPI Routers - chatbot = GET - /chatbot/{document_id} request received")
+    return invoke_pipeline(document_id, prompt.question, prompt.prompt_type, prompt.source)
+    
