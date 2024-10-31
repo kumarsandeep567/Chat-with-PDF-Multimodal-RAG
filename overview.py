@@ -1,7 +1,7 @@
 import streamlit as st
 from dotenv import load_dotenv
-from loginpage import display_login_page
-from homepage import display_home_page
+from Assignment3.Assignment3.loginpage import display_login_page
+from home import display_home_page
 from registerpage import display_register_page
 
 # Load environment variables

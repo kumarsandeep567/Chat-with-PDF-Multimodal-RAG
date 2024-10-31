@@ -24,7 +24,7 @@ selected_doc = st.selectbox(
 
 # Retrieve the selected document's data
 selected_data = next(doc for doc in documents if doc["title"] == selected_doc)
-
+ 
 # Display document details
 st.image(selected_data["image_url"], width=200)
 st.write(f"**Title**: {selected_data['title']}")
@@ -33,7 +33,7 @@ st.write(f"[Download PDF]({selected_data['pdf_url']})")
 # Summary generation button
 if st.button("Generate Summary"):
     with st.spinner("Generating summary..."):
-        generated_summary = generate_summary(selected_data['title'])
+        generated_summary = (selected_data['title'])
         st.success("Summary generated successfully!")
         st.write("**Generated Summary**")
         st.write(generated_summary)

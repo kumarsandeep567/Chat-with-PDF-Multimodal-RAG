@@ -2,10 +2,6 @@ import streamlit as st
 import time
 
 # Placeholder function to simulate the multimodal RAG model for generating answers (replace with actual model call)
-# import streamlit as st
-import time
-
-# Placeholder function to simulate the multimodal RAG model for generating answers (replace with actual model call)
 def qainterface(question):
     time.sleep(2)  # Simulate processing time
     return f"Generated answer for: '{question}'"
@@ -14,7 +10,7 @@ def qainterface(question):
 qa_history = []
 research_notes = []
 
-def display_qa_interface_page():
+def display_qainterface_page():
     st.title("Q/A Interface")
 
     # Document selection dropdown
@@ -43,7 +39,9 @@ def display_qa_interface_page():
 
     # Save to Research Notes
     if st.button("Save to Research Notes"):
-        if question and answer:
+        if question and qa_history:
+            # Get the latest answer from the history
+            answer = qa_history[-1]['answer']
             research_notes.append({"document": selected_doc, "question": question, "answer": answer})
             st.success("Answer saved to Research Notes.")
         else:
@@ -65,3 +63,6 @@ def display_qa_interface_page():
                 st.write(f"**Q{idx + 1}:** {note['question']}")
                 st.write(f"**A:** {note['answer']}")
                 st.write("---")
+
+
+

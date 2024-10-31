@@ -14,7 +14,7 @@ def register(first_name, last_name, email, phone, password):
         'email': email, 
         'password': password
     }
-    response = requests.post('http://127.0.0.1:8000/register', json=data)  
+    response = requests.post('http://' + os.getenv("HOSTNAME") + ':8000/register', json=data)  
     return response.json()
 
 def display_register_page():
