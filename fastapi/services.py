@@ -25,6 +25,7 @@ from snowflake.connector import DictCursor
 from connectDB import create_connection_to_snowflake, close_connection
 
 # RAG Specific Imports
+from cleanlab_studio import Studio
 from langchain_chroma import Chroma
 from langchain_openai import ChatOpenAI
 from langchain.storage import InMemoryStore
@@ -32,6 +33,7 @@ from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.messages import HumanMessage
 from unstructured.partition.pdf import partition_pdf
+from langchain_nvidia_ai_endpoints import ChatNVIDIA
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -562,7 +564,7 @@ def download_files_from_s3(document_id):
     if os.path.exists(local_dir) and os.listdir(local_dir):
         logger.info(f"FASTAPI Services - download_files_from_s3() - Local directory for {document_id} already exists and contains files. Skipping download.")
         return JSONResponse({
-            'status' : 200,
+            'status' : status.HTTP_200_OK,
             'type' : 'string',
             'message' : 'Files already exist locally. Now download required'
         })
@@ -592,7 +594,7 @@ def download_files_from_s3(document_id):
             logger.info(f"FASTAPI Services - download_files_from_s3() - Downloaded {file_name}")
         
         return JSONResponse({
-            'status' : 200,
+            'status' : status.HTTP_200_OK,
             'type' : 'string',
             'message' : 'Files downloaded successfully'
         })
@@ -600,7 +602,7 @@ def download_files_from_s3(document_id):
     except Exception as e:
         logger.error(f"FASTAPI Services Error - download_files_from_s3() encountered an error: {e}")
         return JSONResponse({
-            'status' : 500,
+            'status' : status.HTTP_500_INTERNAL_SERVER_ERROR,
             'type': 'string',
             'message' : 'An error occured while downloading files from S3'
         })
@@ -675,7 +677,7 @@ def generate_summary(document_id):
                 summary += chunk.choices[0].delta.content
         logger.info(f"FASTAPI Services - generate_summary() - {document_id} - Summary generated successfully")
         return JSONResponse({
-            'status' : 200,
+            'status' : status.HTTP_200_OK,
             'type' : 'text',
             'message' : summary
         })
@@ -683,13 +685,60 @@ def generate_summary(document_id):
     except Exception as e:
         logger.error(f"FASTAPI Services Error - generate_summary() encountered an error: {e}")
         return JSONResponse({
-            'status' : 500,
+            'status' : status.HTTP_500_INTERNAL_SERVER_ERROR,
             'type' : 'string',
             'message' : 'Error while generating summary for the pdf document'
         })
 
-# Provide path to Tesseract OCR (Windows only)
-pytesseract.pytesseract.tesseract_cmd = ""
+
+# Helper function to store the responses into the database
+def save_response_to_db(document_id, question, response, token):
+    logger.info(f"FASTAPI Services - save_response_to_db() - Saving Research Notes to SnowFlake database")
+    token_payload = decode_jwt_token(token)
+    user_id = token_payload['user_id']
+    logger.info(f"FASTAPI Services - save_response_to_db() - User id = {user_id}")
+    conn = create_connection_to_snowflake()
+
+    if conn is None:
+        return JSONResponse({
+            'status': status.HTTP_503_SERVICE_UNAVAILABLE,
+            'type': 'string',
+            'message': 'Database not found'
+        })
+    
+    if conn:
+        logger.info(f"FASTAPI Services - save_response_to_db() - Database connection successful")
+        cursor = conn.cursor()
+        try:
+            logger.info(f"FASTAPI Services - SQL - save_response_to_db() - Executing INSERT statement")
+            query = f"""INSERT INTO research_notes(document_id, user_id, prompt, response) VALUES('{document_id}', '{user_id}', '{str(question).replace("'", "")}', '{str(response).replace("'", "")}')"""
+
+            cursor.execute(query)
+            conn.commit()
+            logger.info(f"FASTAPI Services - SQL - save_response_to_db() - INSERT statement executed successfully")
+            return JSONResponse({
+                'status': status.HTTP_200_OK,
+                'type'  : 'string',
+                'message' : 'Response stored to database successfully'
+            })
+        except Exception as e:
+            logger.error(f"FASTAPI Services Error - save_response_to_db() encountered an error: {e}")  
+            response = {
+                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    'type': "string",
+                    "message": "Error while saving responses to Database",
+                }
+        finally:
+            close_connection(conn, cursor)
+            logger.info(f"FASTAPI Services - save_response_to_db() - Database - Connection to the database was closed")
+
+
+# # Provide path to Tesseract OCR (Windows only)
+# pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+
+# Tesseract OCR - Homebrew
+pytesseract.pytesseract.tesseract_cmd = "/opt/homebrew/bin/tesseract"
+
 
 # ============================== Handling Text based content ==============================
 
@@ -1105,6 +1154,13 @@ def multi_modal_rag_chain(retriever, prompt_type = "default", max_tokens = 1024)
         api_key     = os.getenv("OPEN_AI_API")
     )
 
+    # model = ChatNVIDIA(
+    #     model       = "meta/llama-3.2-90b-vision-instruct",
+    #     api_key     = os.getenv("NVIDIA_API"),
+    #     temperature = 0,
+    #     max_tokens  = max_tokens
+    # )
+
     # Lambda function that includes both data_dict and prompt_type
     prompt_func = lambda data_dict: img_prompt_func(data_dict, prompt_type = prompt_type)
 
@@ -1122,7 +1178,7 @@ def multi_modal_rag_chain(retriever, prompt_type = "default", max_tokens = 1024)
     return chain
 
 
-def invoke_pipeline(document_id, question, prompt_type, source):
+def invoke_pipeline(document_id, question, prompt_type, source, token):
 
     # Find the PDF document in the directory of document_id
     fpath = os.path.join(os.getcwd(), os.getenv("DOWNLOAD_DIRECTORY", "downloads") , document_id)
@@ -1231,6 +1287,7 @@ def invoke_pipeline(document_id, question, prompt_type, source):
     retriever_report = create_report_retriever(report_vectorstore)
 
     try:
+
         # Check retrieval
         query = question
 
@@ -1240,7 +1297,7 @@ def invoke_pipeline(document_id, question, prompt_type, source):
                 chain_multimodal_rag = multi_modal_rag_chain(retriever_report, prompt_type="report", max_tokens=2048)
                 docs = retriever_report.invoke(query)
             
-            if source == "full_text":
+            else:
                 # RAG chain for generating reports, with full_text_vectorstore as source
                 chain_multimodal_rag = multi_modal_rag_chain(retriever_multi_vector_img, prompt_type="report", max_tokens=2048)
                 docs = retriever_multi_vector_img.invoke(query)
@@ -1251,11 +1308,11 @@ def invoke_pipeline(document_id, question, prompt_type, source):
                 chain_multimodal_rag = multi_modal_rag_chain(retriever_report, prompt_type="default")
                 docs = retriever_report.invoke(query)
             
-            if source == "full_text":
+            else:
                 # Default Q&A RAG chain, with full_text_vectorstore as source
                 chain_multimodal_rag = multi_modal_rag_chain(retriever_multi_vector_img, prompt_type="default")
                 docs = retriever_multi_vector_img.invoke(query)
-    
+        
 
         # Check what docs were retrieved
         print("Documents retrieved: ", len(docs))
@@ -1263,17 +1320,44 @@ def invoke_pipeline(document_id, question, prompt_type, source):
             print(f"Document: {i}")
             print(docs[i])
 
+        print("Image Documents fetched:")
+        doc_limit = len(docs) if len(docs) < 3 else 3
+        
+        images_retrieved = {
+            "length": 0,
+            "content": []
+        }
+        for i in range(doc_limit):
+            if looks_like_base64(docs[i]):
+                images_retrieved['length'] += 1
+                images_retrieved['content'].append(docs[i])
+
+        print(images_retrieved)
+
         # Run the default RAG chain
         response = chain_multimodal_rag.invoke(query)
         print("LLM's response:")
         print(response)
 
+        # Get trust score
+        studio = Studio(os.getenv("TLM_API_KEY"))
+        tlm = studio.TLM(
+            options = {
+                "model"     : "gpt-4o"
+            }
+        )
+        score = tlm.get_trustworthiness_score(prompt=query, response=response)
+
+        print("Trust score:")
+        print(score)
+
         # Save and index reports in report_vectorstore
         if prompt_type == "report":
             save_report_vectorstore(report_vectorstore, response)
+            save_response_to_db(document_id, question, response, token)
 
         return JSONResponse({
-            'status': 200,
+            'status': status.HTTP_200_OK,
             'type': 'string',
             'message': response
         })
@@ -1281,7 +1365,7 @@ def invoke_pipeline(document_id, question, prompt_type, source):
     except Exception as e:
         logger.error(f"FASTAPI Services Erorr - invoke_pipeline() encountered an error: {e}")
         return JSONResponse({
-            'status' : 500,
+            'status' : status.HTTP_500_INTERNAL_SERVER_ERROR,
             'type' : 'string',
             'message' : 'Error while implementing RAG pipeline'
         })

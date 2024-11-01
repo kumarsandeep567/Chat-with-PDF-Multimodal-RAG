@@ -161,8 +161,8 @@ def doc_summary(
 def chatbot(
     prompt: UserPrompts,
     document_id: str,
-    # token: str = Depends(verify_token)
+    token: str = Depends(verify_token)
 ) -> JSONResponse:
     logger.info(f"FASTAPI Routers - chatbot = Generating summary for the document = {document_id}")
     logger.info(f"FASTAPI Routers - chatbot = GET - /chatbot/{document_id} request received")
-    return invoke_pipeline(document_id, prompt.question, prompt.prompt_type, prompt.source)
+    return invoke_pipeline(document_id, prompt.question, prompt.prompt_type, prompt.source, token)
