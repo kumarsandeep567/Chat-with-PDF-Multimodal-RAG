@@ -25,7 +25,7 @@ AWS S3 - Cloud Storage
 - FastAPI: http://18.117.79.65:8000/health
 
 ## Codelabs Link
-Codelabs documentation link: https://codelabs-preview.appspot.com/?file_id=1f3QFkZMXISlCaRTayBB-mjnfm00do8oNYWJC9lTWMXw#8
+Codelabs documentation link: https://docs.google.com/document/d/1bqlMWizDFQHl4ucXhfDf2G6EH_YXzS_qWhY8qBONL2w/edit?usp=sharing
 
 ## **Video of Submission**
 Demo Link: https://youtu.be/advkI-5NLoQ
@@ -37,10 +37,10 @@ Demo Link: https://youtu.be/advkI-5NLoQ
 
 Name | NUID | Contribution% | Work_Contributed
 --- | --- | --- | --- |
-Sandeep Suresh Kumar | 002841297 | 33% | PyMuPDF Extractor Tool, FastAPI, Dockerization
-Deepthi Nasika       | 002474582 | 33% | Azure PDF Extractor Tool, Streamlit, Airflow Pipeline Setup
-Gomathy Selvamuthiah | 002410534 | 33% | Adobe PDF Extractor Tool, Streamlit, Documentation
-Ramy Solanki         | 002816593 | 33% | JWT Implementation, DB Schema
+Sandeep Suresh Kumar | 002841297 | 33% | Scraping, RAG Implementation, Report Generation, Research Notes
+Deepthi Nasika       | 002474582 | 33% | FastAPI, Summary Generation, Streamlit, Deployment
+Gomathy Selvamuthiah | 002410534 | 33% | Snowflake Database, AirFlow, Streamlit, Documentation
+Ramy Solanki         | 002816593 | 33% | JWT, Amazon S3, Dockerization, Documentation
 
 ## Problem Statement
 As Large Language Models (LLMs) like GPT become increasingly prevalent in various applications, it's crucial to assess their performance accurately, especially in specialized domains. The GAIA dataset provides a benchmark for evaluating AI assistants across diverse tasks. This project aims to create a comprehensive tool that allows researchers and developers to evaluate the comprehension capabilities of LLM, specifically OpenAI's GPT-4o. The application primarily focuses on:
