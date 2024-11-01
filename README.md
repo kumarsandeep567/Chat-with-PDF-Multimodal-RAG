@@ -44,8 +44,8 @@ With the rapid growth of publications, it has become increasingly challenging to
 
 
 
-### 2. Core Application
-![Architecture Diagram](https://github.com/BigDataIA-Fall2024-TeamB6/Assignment2/blob/airflow/diagram/core_application_service.png)
+### 2. Airflow Pipeline
+![Architecture Diagram](https://github.com/BigDataIA-Fall2024-TeamB6/Assignment3/blob/streamlit/UI_FirstDraft/diagram/airflow_pipeline.png)
 
 
 
