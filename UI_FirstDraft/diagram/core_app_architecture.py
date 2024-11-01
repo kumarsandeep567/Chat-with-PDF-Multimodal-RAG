@@ -1,92 +1,59 @@
 from diagrams import Diagram, Edge, Cluster 
 from diagrams.aws.storage import S3 
-from diagrams.saas.analytics import Snowflake
-from diagrams.onprem.workflow import Airflow 
 from diagrams.programming.framework import FastAPI 
-from diagrams.programming.flowchart import Inspection
 from diagrams.custom import Custom 
 from diagrams.onprem.client import Users 
 
 
-with Diagram("Assignment 3 Architecture", show = False):
+with Diagram("Core Application Pipeline", show = False):
     
     # Define nodes
     users           = Users("End Users")
-    question        = Inspection("Question")
+    document_request= Custom("Request to\nDownload\nChosen PDF", "./images/Download.png")
+    question        = Custom("Question", "./images/Question.png")
     streamlit_app   = Custom("Streamlit", "./images/Streamlit.png") 
-    
-    cfa_institute   = Custom("Data Source \n Website - CFA Institute", "./images/cfa-institute.png")
-    pdf             = Custom("PDF Documents \n and images", "./images/PDF_documents.png")
-    scraper         = Airflow("Content Extractor")
-    airflow         = Airflow("Airflow \n Snowflake and S3 uploader") 
-    s3_1            = S3("AWS S3\n(Images, PDFs)")
     s3_2            = S3("AWS S3\n(Images, PDFs)")
-    snowflake       = Snowflake("Snowflake DB")
+    cleanlabs       = Custom("CleanLabs\nTrusted Language Model", "./images/cleanlabs.png")
     
     fastapi         = FastAPI("FastAPI")
     pdf2            = Custom("PDF Document", "./images/PDF_documents.png")
+    nvidia          = Custom("Llama 3.1 405b\non\nNvidia NIM", "./images/Nvidia.png")
     unstructured    = Custom("Unstructured\nParsing PDFs \nwith\nMachine Learning", "./images/Unstructured.png")
     extracted_text  = Custom("Text", "./images/Text.png")
     extracted_image = Custom("Images, Tables", "./images/PNG.png")
-    openai_embed    = Custom("OpenAI\nEmbeddings", "./images/OpenAI.png")
+    openai_embed_1  = Custom("OpenAI\nEmbeddings", "./images/OpenAI.png")
+    openai_embed_2  = Custom("OpenAI\nEmbeddings", "./images/OpenAI.png")
     chromadb        = Custom("ChromaDB\nVector Store", "./images/Chroma.png")
     openai_llm1     = Custom("Image Summary\nwith\nGPT-4o", "./images/OpenAI.png")
+    openai_llm2     = Custom("GPT-4o", "./images/OpenAI.png")
+    memory          = Custom("In-Memory\nDocument Store", "./images/InMemoryStore.png")
+    mmr             = Custom("MultiVector\nRetriever", "./images/MultiVectorRetriever.png")
 
-    
-
-
-    with Cluster("Data Ingestion & Storage", direction = "LR"):
-        cfa_institute >> Edge() >> scraper
-        scraper >> Edge() >> pdf
-        pdf >> Edge() >> airflow
-        airflow >> Edge() >> s3_1
-        airflow >> Edge() >> snowflake
 
     with Cluster("RAG Application", direction = "RL"):
-        question << users
-        streamlit_app << question
-        fastapi << streamlit_app
-        fastapi << s3_2
-        pdf2 << fastapi
-        unstructured << pdf2
-        extracted_text << unstructured
-        extracted_image << unstructured
-        openai_llm1 << extracted_image
-        openai_embed << extracted_text
-        chromadb << openai_embed
-        openai_embed << openai_llm1
-
-
-
-
-
-
-    # with Cluster("Data Ingestion & Storage"):
-    #     cfa_institute >> Edge(label="Data Source") >> pdf
-    #     pdf >> Edge(label="Data Source") >> scraper 
-    #     scraper >> Edge(label="Scrape data (CFA Institute)") >> airflow 
-    #     airflow >> Edge(label="Upload Images & PDFs") >> s3 
-    #     airflow >> Edge(label="Store Metadata") >> snowflake 
-
-
-    # with Cluster("Client Application", direction="LR"):    
-    #     streamlit_app << Edge(label="User Requests") >> fastapi 
-    #     fastapi >> Edge(label="Summarization / Multi-modal Query") >> nv_service  
-    #     fastapi >> Edge(label="User Interface") >> streamlit_app 
-    #     users >> Edge(label="User Interactions") >> streamlit_app 
-
-
-    # with Cluster("Research Notes Indexing & Search"):
-    #     rag_index >> Edge(label="Preprocess Data") >> cleanlabs 
-    #     cleanlabs >> Edge(label="Vector Store for Search") >> chroma 
-    #     chroma >> Edge(label="Store Research Notes")
-
-
-    # fastapi >> Edge(label="Search Requests")
-    # chroma >> Edge(label="Retrieve Notes") >> fastapi 
-    # chroma >> Edge(label="Query Results") >> fastapi 
-
-
-    # with Cluster("Deployment"):
-    #     fastapi - docker 
-    #     streamlit_app - docker 
+        streamlit_app << Edge() << users
+        fastapi << Edge() << streamlit_app
+        question << Edge(label="User asks question") << fastapi
+        document_request << Edge(label="Forward request\nto FastAPI") << streamlit_app
+        fastapi << Edge() << document_request
+        fastapi << Edge() << s3_2
+        nvidia << Edge(label="Get Document Summary") >> fastapi
+        pdf2 << Edge(label="Save PDF locally for text, image extraction") << fastapi
+        unstructured << Edge() << pdf2
+        extracted_text << Edge(label="Document Chunks") << unstructured
+        extracted_image << Edge() << unstructured
+        openai_llm1 << Edge(label="Images in Base64 format") << extracted_image
+        openai_embed_1 << Edge(label="Document Chunks") << extracted_text
+        chromadb << Edge(label="Save and Index\nembedded content") << openai_embed_1
+        openai_embed_1 << Edge(label="Image summary") << openai_llm1
+        memory << Edge(label="Store in RAM\nfaster access") << extracted_image
+        openai_embed_2 << Edge() << question
+        mmr << Edge() << openai_embed_2
+        mmr << Edge(label="Relevant Document Chunks") << chromadb
+        mmr << Edge(label="Relevant Images") << memory
+        openai_llm2 << Edge(label="Question with relevant context") << mmr 
+        fastapi << Edge(label="Answer") << openai_llm2
+        cleanlabs << Edge(label="Get Trust Score\nfor LLM response") >> fastapi
+        fastapi << Edge(label="Relevant Images") << memory
+        streamlit_app << Edge(label="Answer or Report\n(with images)") << fastapi
+        users << Edge() << streamlit_app
