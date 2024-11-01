@@ -1313,59 +1313,56 @@ def invoke_pipeline(document_id, question, prompt_type, source, token):
                 chain_multimodal_rag = multi_modal_rag_chain(retriever_multi_vector_img, prompt_type="default")
                 docs = retriever_multi_vector_img.invoke(query)
         
-
-        # Check what docs were retrieved
-        print("Documents retrieved: ", len(docs))
-        for i in range(len(docs)):
-            print(f"Document: {i}")
-            print(docs[i])
-
-        print("Image Documents fetched:")
+        # Bundle the images
         doc_limit = len(docs) if len(docs) < 3 else 3
-        
         images_retrieved = {
             "length": 0,
             "content": []
         }
+        
         for i in range(doc_limit):
             if looks_like_base64(docs[i]):
                 images_retrieved['length'] += 1
                 images_retrieved['content'].append(docs[i])
 
-        print(images_retrieved)
-
         # Run the default RAG chain
-        response = chain_multimodal_rag.invoke(query)
-        print("LLM's response:")
-        print(response)
+        llm_response = chain_multimodal_rag.invoke(query)
 
-        # Get trust score
+        # Get trust score from CleanLabs TLM
         studio = Studio(os.getenv("TLM_API_KEY"))
         tlm = studio.TLM(
             options = {
-                "model"     : "gpt-4o"
+                "model" : "gpt-4o"
             }
         )
-        score = tlm.get_trustworthiness_score(prompt=query, response=response)
+        trust_score = tlm.get_trustworthiness_score(prompt=query, response=llm_response)
 
-        print("Trust score:")
-        print(score)
+        # Save and index reports in report_vectorstore only if trust_score exceeds threshold
+        if prompt_type == "report" and trust_score['trustworthiness_score'] > 0.6:
+            save_report_vectorstore(report_vectorstore, llm_response)
+            save_response_to_db(document_id, question, llm_response, token)
 
-        # Save and index reports in report_vectorstore
-        if prompt_type == "report":
-            save_report_vectorstore(report_vectorstore, response)
-            save_response_to_db(document_id, question, response, token)
+        # Prepare the JSON content to return to frontend
+        response = {
+            "token"         : token,
+            "document_id"   : document_id,
+            "question"      : question,
+            "llm_response"  : llm_response,
+            "image_length"  : images_retrieved['length'],
+            "image_content" : images_retrieved['content'],
+            "trust_score"   : f"{trust_score['trustworthiness_score']:.3f}"
+        }
 
         return JSONResponse({
-            'status': status.HTTP_200_OK,
-            'type': 'string',
-            'message': response
+            'status'    : status.HTTP_200_OK,
+            'type'      : 'json',
+            'message'   : response
         })
     
     except Exception as e:
         logger.error(f"FASTAPI Services Erorr - invoke_pipeline() encountered an error: {e}")
         return JSONResponse({
-            'status' : status.HTTP_500_INTERNAL_SERVER_ERROR,
-            'type' : 'string',
-            'message' : 'Error while implementing RAG pipeline'
+            'status'    : status.HTTP_500_INTERNAL_SERVER_ERROR,
+            'type'      : 'string',
+            'message'   : 'Error while implementing RAG pipeline'
         })
