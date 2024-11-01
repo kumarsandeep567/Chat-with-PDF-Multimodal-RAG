@@ -43,18 +43,11 @@ With the rapid growth of publications, it has become increasingly challenging to
 ![Architecture Diagram](https://github.com/BigDataIA-Fall2024-TeamB6/Assignment3/blob/streamlit/UI_FirstDraft/diagram/core_application_pipeline.png)
 
 
-- Automate the data acquisition process for PDF files in the GAIA dataset
-- Processing list of PDF files from GAIA benchmarking validation & test datasets
-- Integrating it with the PDF Extractor tools either open source or API-based into the pipeline for efficient text extraction
 
 ### 2. Core Application
 ![Architecture Diagram](https://github.com/BigDataIA-Fall2024-TeamB6/Assignment2/blob/airflow/diagram/core_application_service.png)
 
-- Airflow  pipeline streamlining the process of retrieving & processing documents, ensuring the extracted information is stored securely in the cloud Database and files are structurally formatted and stored onto the S3 path
-- User Registration & Login functionality, API endpoints with JWT authentication tokens
-- User data with their credentials, and hashed passwords are stored in the Database
-- All the APIs respective to services are created with authentication in FastAPI
-- User-friendly Streamlit application with Question Answering Interface
+
 
 ## Project Goals
 ### Airflow Pipeline
