@@ -131,10 +131,12 @@ FastAPI ensures that every response is returned in a consistent JSON format with
 - Summary page generates the summary using NVIDIA model with respect to the selected document
 - Question Answering Interface allows users to interact with the document, returns reports with responses to user question prompts along with images and graphs relevant to prompts
 
-
 ### Deployment
-- Containerization of FastAPI and Streamlit applications using Docker. Deployment to a public cloud platform using Docker Compose. Ensuring public accessibility of the deployed applications.
-- The FastAPI and Streamlit are containerized using Docker, and orchestrated through docker compose and the Docker images are pushed to Docker Hub. For deploying the Docker containers, we use an Amazon Web Services (AWS) EC2 instance within the t3-medium tier, followed by the database being hosted on AWS Relational Database Service (RDS). 
+- Containerization of FastAPI and Streamlit applications using Docker
+- Deployment to a public cloud platform using Docker Compose
+- Ensuring public accessibility of the deployed applications - Streamlit and FastAPI
+- Providing clear instructions for users to interact with the RAG application and explore its functionalities
+- The FastAPI and Streamlit are containerized using Docker, and orchestrated through docker compose and the Docker images are pushed to Docker Hub. For deploying the Docker containers, we use an Amazon Web Services (AWS) EC2 instance within the t3-medium tier
 
 
 ## Data Source
@@ -146,6 +148,7 @@ FastAPI ensures that every response is returned in a consistent JSON format with
 
 ## Technologies
 [![BeautifulSoup](https://img.shields.io/badge/BeautifulSoup-FFD43B?style=for-the-badge&logo=python&logoColor=white)](https://www.crummy.com/software/BeautifulSoup/)
+[![Selenium](https://img.shields.io/badge/Selenium-43B02A?style=for-the-badge&logo=selenium&logoColor=white)](https://www.selenium.dev/)
 [![Python](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)](https://www.python.org/)
 [![Amazon S3](https://img.shields.io/badge/Amazon%20S3-569A31?style=for-the-badge&logo=amazonaws&logoColor=white)](https://aws.amazon.com/s3/)
 [![Snowflake](https://img.shields.io/badge/Snowflake-29B1E5?style=for-the-badge&logo=snowflake&logoColor=white)](https://www.snowflake.com/)
@@ -165,10 +168,11 @@ Software Installations required for the project
 1. Python Environment
 A Python environment allows you to create isolated spaces for your Python projects, managing dependencies and versions separately
 
-2. Poetry Environment
-Poetry is a dependency management tool that helps you manage your Python packages and projects efficiently where a user can install all the dependencies onto pyproject.toml file
+2. Poetry Environment/ Python Virtual Environment
+- Poetry is a dependency management tool that helps you manage your Python packages and projects efficiently where a user can install all the dependencies onto pyproject.toml file
+- Python Virtual Environment helps you manage your Python packages efficiently where a user can include all the dependencies in requirements.txt file
 
-3. Packages
+4. Packages
 The project requires multiple packages for loading environment variables: python-dotenv, for loading files from hugging face: huggingface-hub, for connecting to MySQL database: mysql-connector-python, for file storage: google-cloud-storage, for extracting PDF contents from Azure AI Document Intelligence tool: azure-ai-formrecognizer, for extracting PDF contents from Adobe PDF Extract pdfservices-sdk, for extracting PDF contents with open source tool: pymupdf
 ```bash
 pip install -r requirements.txt
@@ -180,14 +184,18 @@ An integrated development environment (IDE) that provides tools and features for
 5. Docker
  Docker allows you to package applications and their dependencies into containers, ensuring consistent environments across different platforms. All the dependencies will be installed on docker-compose.yaml file with env file
 
-6. Google Cloud Storage
-Google Cloud Storage is used for efficient storage of files. All the files loaded from Hugging Face are downloaded to GCS bucket. The extracted contents from the pdf files by all the 3 different PDF Extractor tools like PyMuPDF, Adobe PDF Extract, Azure AI Document Intelligence Tool which are organized into seperate folders like CSV, JSON, Images are also stored into GCS bucket
+6. Amazon S3 Bucket
+Amazon S3 (Simple Storage Service) is a cloud storage solution from AWS used to store files and objects. It provides scalable, secure, and cost-effective storage for all extracted publication files, including images, PDFs, and JSON data, organized under unique document IDs. This bucket serves as the primary cloud storage for file data accessible by the application.
 
 8. Streamlit
 Streamlit is an open-source app framework that allows you to create interactive web applications easily.
 
-9. Amazon RDS
-Amazon RDS is a managed relational database service that makes it easy to set up, operate, and scale a relational database in the cloud. Supports multiple database engines including MySQL, PostgreSQL, Oracle, and SQL Server. 
+9. Snowflake Database
+Snowflake is a cloud-based data warehousing and analytics service that supports structured data storage. This project uses Snowflake to store extracted textual data, such as titles, summaries, cover image URLs, and PDF URLs from CFA publications. Snowflake also hosts user data and stores responses to user queries, enabling efficient querying and data retrieval.
+
+10. ChromaDB Vector Database
+ChromaDB is a specialized vector database used for storing vector embeddings of processed document contents, such as text chunks and image embeddings in base64 format. It enables efficient retrieval by calculating cosine similarity between user query embeddings and stored content embeddings, ensuring relevant document content is retrieved quickly and accurately for user queries.
+
 
 ## Project Structure
 ```
@@ -247,7 +255,7 @@ Assignment2/
 1. **Clone the Repository**: Clone the repository onto your local machine and navigate to the directory within your terminal.
 
    ```bash
-   git clone https://github.com/BigDataIA-Spring2024-Sec1-Team4/Assignment2
+   git clone https://github.com/BigDataIA-Fall2024-TeamB6/Assignment3
    ```
 
 2. **Install Docker**: Install docker and `docker compose` to run the application:
