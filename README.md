@@ -192,55 +192,71 @@ ChromaDB is a specialized vector database used for storing vector embeddings of 
 
 ## Project Structure
 ```
-Assignment2/
-├── airflow/
-│   ├── .env.example
-│   ├── airflow_pipeline.py
-│   ├── azure_pdfFileExtractor.py
-│   ├── cloud_uploader.py
-│   ├── docker-compose.yaml
-│   ├── fileLoader.py
-│   ├── fileParser.py
-│   ├── pymupdf_content_extractor.py
-│   ├── requirements.txt
-├── diagram/
-│   ├──images/
-│   │   ├── Adobe.png
-│   │   ├── Azure.png
-│   │   ├── CSV.png
-│   │   ├── HuggingFace_logo.png
-│   │   ├── JSON.png
-│   │   ├── JSON_CSV_PNG.png
-│   │   ├── OpenAI.png
-│   │   ├── PDF_documents.png
-│   │   ├── PNG.png
-│   │   └── PyMuPDF.png
-│   ├── airflow_architecture.py
-│   ├── airflow_etl_pipeline.png
-│   ├── core_app_architecture.py
-│   ├── core_application_service.png
-│   └── requirements.txt
-├── fastapi/
-│   ├── .env.example
-│   ├── helpers.py
-│   ├── main.py
-│   └── requirements.txt
-├── streamlit/
-│   ├── .streamlit/
-│   │   ├── DBconnection.py
-│   │   └── config.toml
-│   ├── .env.example
-│   ├── app.py
-│   ├── homepage.py
-│   ├── loginpage.py
-│   ├── overview.py
-│   ├── registerpage.py
-│   ├── searchengine.py
-│   ├── validation.py
-│   └── requirements.txt
-├── .gitignore
-├── LICENSE
-└── README.md
+Assignment3/
+├── airflow
+│   ├── Dockerfile
+│   ├── POC
+│   │   ├── MultiModalRAG.ipynb
+│   │   ├── Stage1.ipynb
+│   │   ├── Stage2.ipynb
+│   │   ├── Stage3.py
+│   │   └── stage1.csv
+│   ├── chromedriver
+│   │   ├── LICENSE.chromedriver
+│   │   ├── THIRD_PARTY_NOTICES.chromedriver
+│   │   └── chromedriver.exe
+│   ├── dags
+│   │   └── airflow_pipeline.py
+│   ├── docker-compose.yaml
+│   ├── rag_pipeline.py
+│   ├── requirements.txt
+│   ├── scraper.py
+│   ├── snowflakeDB.py
+│   ├── upload_to_S3.py
+│   └── webscrape.py
+├── diagram
+│   ├── AirflowPipeline.py
+│   ├── airflow_pipeline.png
+│   ├── core_app_architecture.py
+│   ├── core_application_pipeline.png
+│   └── images
+│       ├── Chroma.png
+│       ├── Download.png
+│       ├── InMemoryStore.png
+│       ├── Langchain.png
+│       ├── MultiVectorRetriever.png
+│       ├── Nvidia-Logo.png
+│       ├── Nvidia.png
+│       ├── OpenAI.png
+│       ├── PDF_documents.png
+│       ├── PNG.png
+│       ├── Question.png
+│       ├── Snowflake.png
+│       ├── Streamlit.png
+│       ├── Text.png
+│       ├── Unstructured.png
+│       ├── cfa-institute.png
+│       └── cleanlabs.png
+├── docker-compose.yml
+├── fastapi
+│   ├── Dockerfile
+│   ├── connectDB.py
+│   ├── main.py
+│   ├── models.py
+│   ├── requirements.txt
+│   ├── routers.py
+│   └── services.py
+└── streamlit
+    ├── Dockerfile
+    ├── app.py
+    ├── documentexplorer.py
+    ├── homepage.py
+    ├── loginpage.py
+    ├── overview.py
+    ├── qainterface.py
+    ├── registerpage.py
+    ├── requirements.txt
+    └── summary.py
 
 ```
 
