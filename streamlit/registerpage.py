@@ -33,6 +33,7 @@ def display_register_page():
             st.success("Registered successfully!")
             st.session_state["logged_in"] = True 
             st.session_state['token'] = response['message'].get('token')
-            st.session_state['page'] = 'searchengine'  # Navigate to the search engine
+            st.session_state['page'] = 'documentexplorer'  # Navigate to the search engine
+            st.rerun()
         else:
-            st.error("Registration failed. Please try again.")
+            st.error("Registration failed/ User Already Exists. Please try again")

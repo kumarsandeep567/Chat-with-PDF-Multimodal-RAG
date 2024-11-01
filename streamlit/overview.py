@@ -14,7 +14,7 @@ def display_overview_page():
     if 'page' not in st.session_state:
         st.session_state['page'] = 'home'  # Default page
 
-    st.sidebar.title("AI Model Evaluation Tool")
+    st.sidebar.title("RAG Application")
     page = st.sidebar.selectbox("Select an option", ("Home", "Login", "Register"))
 
     if page == "Home":
