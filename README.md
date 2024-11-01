@@ -43,12 +43,15 @@ Gomathy Selvamuthiah | 002410534 | 33% | Snowflake Database, AirFlow, Streamlit,
 Ramy Solanki         | 002816593 | 33% | JWT, Amazon S3, Dockerization, Documentation
 
 ## Problem Statement
-As Large Language Models (LLMs) like GPT become increasingly prevalent in various applications, it's crucial to assess their performance accurately, especially in specialized domains. The GAIA dataset provides a benchmark for evaluating AI assistants across diverse tasks. This project aims to create a comprehensive tool that allows researchers and developers to evaluate the comprehension capabilities of LLM, specifically OpenAI's GPT-4o. The application primarily focuses on:
+With the rapid growth of publications, it has become increasingly challenging to analyze complex documents, interpret images and graphs, and derive meaningful business insights. This project aims to create a robust solution that allows users to interact with documents through Q&A functionality. By leveraging Retrieval-Augmented Generation (RAG), the application provides relevant responses, images, and graphs specific to user questions, simplifying the analysis process and enabling users to obtain accurate insights efficiently. The application primarily focuses on:
 
-1. Automating the data acquisition process for PDF files by creating Airflow pipeline
-2. Automatically extract and process information from the GAIA dataset's PDF files
-3. Prompt GPT with questions, providing it with extracted content from PDF files and annotation metadata
-4. Compare GPT's responses against the known correct answers from the GAIA dataset
+1. Content Extraction and Storage: Scrape content from the CFA Institute Research Foundation website, loading files onto S3 and storing textual data, such as titles and summaries, in a Snowflake database.
+2. Automated Data Ingestion: Automate the data ingestion process with an Airflow pipeline, ensuring efficient and structured data handling.
+3. API Endpoints: Develop multiple API endpoints to support services like document exploration and dropdown selection for document access, RAG interaction with UI.
+4. Real-Time Summary Generation: Generate document summaries on the fly using NVIDIA’s advanced services.
+5. Multi-Modal RAG with Cleanlabs Integration: Implement multi-modal RAG to enhance response relevance and integrate Cleanlabs for response trustworthiness.
+6. Comprehensive Report Generation: Create reports that include responses, images, and graphs relevant to user queries for a richer understanding.
+7. Research Notes Validation and Indexing: Validate, store, and incrementally index research notes to facilitate efficient future searches and analysis.
 
 
 ## Architecture Diagram
@@ -69,7 +72,21 @@ As Large Language Models (LLMs) like GPT become increasingly prevalent in variou
 - User-friendly Streamlit application with Question Answering Interface
 
 ## Project Goals
-### Airflow Pipelines
+### Airflow Pipeline
+#### 1. Objective
+- Streamline the process of extracting contents from publications website which includes textual data, images, pdf files, JSON files and loading files with respect to each docuemnt on Amazon S3 bucket
+- Automating data storage process by integrating data ingestion with Snowflake database to load textual publications information like title, brief summary, cover image url and pdf url.
+#### 2. Tools
+- Extraction of data from publications website - huggingface_hub downloader, list_repo_files
+- Database - Snowflake Database
+- File storage - Amazon S3 (Simple Storage Service)
+- 
+- 
+#### 3. Output
+- Extracted data from pdf files is stored in Amazon RDS in a formatted manner. All the CSV, Images, JSON files extracted from the PDF using different PDF Extractor tools are stored in their respective folders under the pdf filename in Google Cloud Storage.
+- Extracted text data which is in JSON is formatted into specific tables like pymupdf_info, adobe_info, azure_info. Prompt and annotation data from test and validation datasets are formatted into gaia_features and gaia_annotations table. Users information is being recorded in users table. All the tables are stored in Amazon RDS MySQL Database.
+
+### Multi-modal RAG
 #### 1. Objective
 - Streamline the process of retrieving, extracting content and processing a list of PDF files from GAIA benchmarking test and validation datasets with the choosen text extraction tool.
 - Integration of both open-source (ex: PyMuPDF) and API-based (ex: Adobe PDF Extract, Azure AI Document Intelligence) text extraction methods ensuring the extracted information is accurately populated into the data storage (ex: AWS S3, Google Cloud Storage)
@@ -82,6 +99,7 @@ As Large Language Models (LLMs) like GPT become increasingly prevalent in variou
 #### 3. Output
 - Extracted data from pdf files is stored in Amazon RDS in a formatted manner. All the CSV, Images, JSON files extracted from the PDF using different PDF Extractor tools are stored in their respective folders under the pdf filename in Google Cloud Storage.
 - Extracted text data which is in JSON is formatted into specific tables like pymupdf_info, adobe_info, azure_info. Prompt and annotation data from test and validation datasets are formatted into gaia_features and gaia_annotations table. Users information is being recorded in users table. All the tables are stored in Amazon RDS MySQL Database.
+
 
 ### FastAPI
 #### 1. Objective
