@@ -8,8 +8,6 @@ def display_home_page():
     # Introduction
     st.markdown("""
     This interactive platform is designed to help you explore and analyze publications from the CFA Institute Research Foundation using advanced Retrieval-Augmented Generation (RAG) techniques. Here’s how to navigate through the application seamlessly:
-<<<<<<< HEAD
-=======
     """)
 
     # Getting Started Section
@@ -69,7 +67,6 @@ def display_home_page():
     st.markdown("""
     ### **Get Started Now!**
     Explore the wealth of knowledge contained in CFA Institute publications and unlock insights that matter to you. Click the **Login/Register** button to begin your journey!
->>>>>>> a2ec78fb37a414fbc92302b5b398e1c585a3435f
     """)
 
     # Getting Started Section
