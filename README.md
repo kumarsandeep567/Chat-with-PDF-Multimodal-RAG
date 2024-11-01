@@ -8,7 +8,7 @@ An interactive RAG based application built using FastAPI and Streamlit to explor
 - FastAPI: http://18.117.79.65:8000/health
 
 ## Codelabs Link
-Codelabs documentation link: https://codelabs-preview.appspot.com/?file_id=1bqlMWizDFQHl4ucXhfDf2G6EH_YXzS_qWhY8qBONL2w#4
+Codelabs documentation link: https://codelabs-preview.appspot.com/?file_id=1bqlMWizDFQHl4ucXhfDf2G6EH_YXzS_qWhY8qBONL2w#0
 ## **Video of Submission**
 Demo Link: https://youtu.be/advkI-5NLoQ
 
