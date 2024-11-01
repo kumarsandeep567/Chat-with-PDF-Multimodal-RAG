@@ -1320,10 +1320,11 @@ def invoke_pipeline(document_id, question, prompt_type, source, token):
             "content": []
         }
         
-        for i in range(doc_limit):
-            if looks_like_base64(docs[i]):
-                images_retrieved['length'] += 1
-                images_retrieved['content'].append(docs[i])
+        if source != "report":
+            for i in range(doc_limit):
+                if looks_like_base64(docs[i]):
+                    images_retrieved['length'] += 1
+                    images_retrieved['content'].append(docs[i])
 
         # Run the default RAG chain
         llm_response = chain_multimodal_rag.invoke(query)
