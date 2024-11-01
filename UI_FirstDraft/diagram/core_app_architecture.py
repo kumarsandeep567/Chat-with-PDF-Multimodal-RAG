@@ -27,7 +27,7 @@ for path in [streamlit_image_path, cfa_institute_image_path, docker_image_path, 
 # Create a new diagram titled "Assignment 3 Architecture"
 # show=False prevents the diagram from opening after creation; direction="LR" makes the diagram flow from left to right
 # node_attr sets default styling for the nodes
-with Diagram("Assignment 3 Architecture", show=False, direction="LR", node_attr={"fontsize": "10", "margin": "0.1"}, outformat="svg", quiet=True):
+with Diagram("Assignment 3 Architecture", show=False, direction="LR", node_attr={"fontsize": "10", "margin": "0.1"}, outformat="svg"):
     
     # Data Ingestion & Storage Cluster: Handles data ingestion and storage using Airflow, S3, and Snowflake
     with Cluster("Data Ingestion & Storage"):
