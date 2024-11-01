@@ -77,17 +77,19 @@ With the rapid growth of publications, it has become increasingly challenging to
 - Streamline the process of extracting contents from publications website which includes textual data, images, pdf files, JSON files and loading files with respect to each docuemnt on Amazon S3 bucket
 - Automating data storage process by integrating data ingestion with Snowflake database to load textual publications information like title, brief summary, cover image url and pdf url.
 #### 2. Tools
-- Extraction of data from publications website - huggingface_hub downloader, list_repo_files
+- Extraction of data from publications website - BeautifulSoup
 - Database - Snowflake Database
 - File storage - Amazon S3 (Simple Storage Service)
-- 
+- Data Automation - Airflow
 - 
 #### 3. Output
-- Extracted data from pdf files is stored in Amazon RDS in a formatted manner. All the CSV, Images, JSON files extracted from the PDF using different PDF Extractor tools are stored in their respective folders under the pdf filename in Google Cloud Storage.
-- Extracted text data which is in JSON is formatted into specific tables like pymupdf_info, adobe_info, azure_info. Prompt and annotation data from test and validation datasets are formatted into gaia_features and gaia_annotations table. Users information is being recorded in users table. All the tables are stored in Amazon RDS MySQL Database.
+- Extracted different types of files which are stored in Amazon S3. Document ID is generated with respect to every publication. All the files fetched under that publication will be stored in document_id folder in S3 bucket - publications_info
+- Extracted textual data which are the details of the publication like title, brief summary, cover image url, pdf url are stored into table publications_info. Users information is being recorded in users table. All the responses to user queries are recorded in research_notes table. All the tables are stored in Snowflake Database
 
 ### Multi-modal RAG
 #### 1. Objective
+- Processing the entire pdf file including text, images, graphs and converting them into vector embeddings, storing the vector embeddings into Vector database
+- 
 - Streamline the process of retrieving, extracting content and processing a list of PDF files from GAIA benchmarking test and validation datasets with the choosen text extraction tool.
 - Integration of both open-source (ex: PyMuPDF) and API-based (ex: Adobe PDF Extract, Azure AI Document Intelligence) text extraction methods ensuring the extracted information is accurately populated into the data storage (ex: AWS S3, Google Cloud Storage)
 #### 2. Tools
