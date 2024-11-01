@@ -737,7 +737,7 @@ def save_response_to_db(document_id, question, response, token):
 # pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
 
 # Tesseract OCR - Homebrew
-pytesseract.pytesseract.tesseract_cmd = "/opt/homebrew/bin/tesseract"
+# pytesseract.pytesseract.tesseract_cmd = "/opt/homebrew/bin/tesseract"
 
 
 # ============================== Handling Text based content ==============================

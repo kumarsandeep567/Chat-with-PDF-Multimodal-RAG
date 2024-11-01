@@ -10,6 +10,7 @@ fastapi[standard]
 python-multipart
 snowflake-connector-python
 
+opencv-python
 langchain
 openai
 langchain-chroma
