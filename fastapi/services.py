@@ -357,7 +357,7 @@ def register_user(first_name, last_name, phone, email, password):
     
 # Helper function to LogIn
 def login_user(db_user, email, password):
-    logger.info(f"FASTAPI Services - login_user() - Registering User data into the database")
+    logger.info(f"FASTAPI Services - login_user() - Logging In User")
     conn = create_connection_to_snowflake()
 
     if conn is None:
@@ -372,6 +372,19 @@ def login_user(db_user, email, password):
         cursor = conn.cursor()
         try:
 
+            # Convert tuple into dictionary
+            if isinstance(db_user, tuple):
+                logger.info(f"FASTAPI Services - login_user() - db_user tuple converted to dictionary")
+                db_user = {
+                    'user_id': db_user[0],
+                    'first_name': db_user[1],
+                    'last_name': db_user[2],
+                    'phone': db_user[3],
+                    'email': db_user[4],
+                    'password': db_user[5],
+                    'jwt_token': db_user[6]
+                }
+
             if verify_password(password, db_user['password']):
                 # Create a JWT token for the user after successful authentication
                 logger.info(f"FASTAPI Services - login_user() - Password Verified")
@@ -380,7 +393,7 @@ def login_user(db_user, email, password):
                     "email"     : db_user['email']
                 })
 
-                token_saved = store_tokens(conn, jwt_token['token'])
+                token_saved = store_tokens(jwt_token['token'])
 
                 if token_saved:
                     logger.info(f"FASTAPI Services - login_user() - JWT token created and stored")
@@ -1282,16 +1295,16 @@ def invoke_pipeline(document_id, question, prompt_type, source):
         response = chain_multimodal_rag.invoke(query)
         print("LLM's response:")
         print(response)
+
+        # Save and index reports in report_vectorstore
+        if prompt_type == "report":
+            save_report_vectorstore(report_vectorstore, response)
+
         return JSONResponse({
             'status': 200,
             'type': 'string',
             'message': response
         })
-
-
-        # Save and index reports in report_vectorstore
-        if prompt_type == "report":
-            save_report_vectorstore(report_vectorstore, response)
     
     except Exception as e:
         logger.error(f"FASTAPI Services Erorr - invoke_pipeline() encountered an error: {e}")

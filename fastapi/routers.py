@@ -25,6 +25,8 @@ load_dotenv()
 logging.basicConfig(level = logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+
+
 # Route for FastAPI Health check
 @router.get("/")
 def health() -> JSONResponse:
@@ -36,6 +38,8 @@ def health() -> JSONResponse:
         'type'      : "string",
         'message'   : "You're viewing a page from FastAPI"
     })
+
+
 
 # Route for registering user
 @router.post("/register")
@@ -51,14 +55,14 @@ def register(user: RegisterUser):
                     })
     else:
         try:
-            register_user(user.first_name, user.last_name, user.phone, user.email, user.password)
+            response = register_user(user.first_name, user.last_name, user.phone, user.email, user.password)
             logger.info("FASTAPI Routers - register - New User Registered Successfully")
-            return JSONResponse({
-                'message' : 'User Registered Successfully'
-            })
+            return response
         except Exception as e:
             logger.info(f"FASTAPI Routers - register - Error registering user:{e}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
 
 # Route for user login
 @router.post("/login")
@@ -73,12 +77,11 @@ def login(user: LoginUser) -> JSONResponse:
                         'message'   : "User not found"
                     })
     else:
-        login_user(db_user, user.email, user.password)
+        response = login_user(db_user, user.email, user.password)
         logger.info("FASTAPI Routers - login - Login Successful")
-        return JSONResponse({
-            'message' : 'Logged In Successfully'
-        })
+        return response
     
+
 # Route for Exploring Documents
 @router.get("/exploredocs",
             response_class = JSONResponse,
@@ -99,6 +102,8 @@ def explore_docs(
     else:
         logger.info(f"FASTAPI Routers - explore_docs - GET - /exploredocs?count={prompt.count} request received")
     return explore_documents(prompt.count)
+
+
 
 # Route for Selecting a document
 @router.get("/load_docs/{document_id}",
@@ -122,6 +127,8 @@ def load_docs(
     logger.info(f"FASTAPI Routers - load_docs = Loading the entire document with id = {document_id}")
     return load_document(document_id)
 
+
+
 # Route for generating summary 
 @router.get("/summary/{document_id}",
         response_class = JSONResponse,
@@ -140,6 +147,8 @@ def doc_summary(
     logger.info(f"FASTAPI Routers - doc_summary = GET - /summary/{document_id} request received")
     return generate_summary(document_id)
 
+
+
 # Route for RAG implementation
 @router.post("/chatbot/{document_id}",
         response_class=JSONResponse,
@@ -152,9 +161,8 @@ def doc_summary(
 def chatbot(
     prompt: UserPrompts,
     document_id: str,
-    token: str = Depends(verify_token)
+    # token: str = Depends(verify_token)
 ) -> JSONResponse:
     logger.info(f"FASTAPI Routers - chatbot = Generating summary for the document = {document_id}")
     logger.info(f"FASTAPI Routers - chatbot = GET - /chatbot/{document_id} request received")
     return invoke_pipeline(document_id, prompt.question, prompt.prompt_type, prompt.source)
-    
