@@ -39,8 +39,9 @@ With the rapid growth of publications, it has become increasingly challenging to
 
 
 ## Architecture Diagram
-### 1. Airflow ETL Pipeline
-![Architecture Diagram](https://github.com/BigDataIA-Fall2024-TeamB6/Assignment2/blob/airflow/diagram/airflow_etl_pipeline.png)
+### 1. Core Application Pipeline
+![Architecture Diagram](https://github.com/BigDataIA-Fall2024-TeamB6/Assignment3/blob/streamlit/UI_FirstDraft/diagram/core_application_pipeline.png)
+
 
 - Automate the data acquisition process for PDF files in the GAIA dataset
 - Processing list of PDF files from GAIA benchmarking validation & test datasets
