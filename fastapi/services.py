@@ -688,36 +688,8 @@ def generate_summary(document_id):
             'message' : 'Error while generating summary for the pdf document'
         })
 
-
-import io
-import os
-import re
-import json
-import uuid
-import base64
-from PIL import Image
-from unidecode import unidecode
-from dotenv import load_dotenv
-from langchain_chroma import Chroma
-from langchain_openai import ChatOpenAI
-from langchain.storage import InMemoryStore
-from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
-import unstructured_pytesseract as pytesseract
-from langchain_core.messages import HumanMessage
-from unstructured.partition.pdf import partition_pdf
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.retrievers.multi_vector import MultiVectorRetriever
-from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-
-
-# Load environment variables
-load_dotenv()
-
 # Provide path to Tesseract OCR (Windows only)
-pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = ""
 
 # ============================== Handling Text based content ==============================
 
