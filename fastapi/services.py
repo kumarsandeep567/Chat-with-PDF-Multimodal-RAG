@@ -18,10 +18,10 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from unidecode import unidecode
 from datetime import timezone, timedelta
-from fastapi import status, HTTPException, Depends
-from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
 from snowflake.connector import DictCursor
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import status, HTTPException, Depends
 from connectDB import create_connection_to_snowflake, close_connection
 
 # RAG Specific Imports
@@ -41,12 +41,14 @@ from langchain.retrievers.multi_vector import MultiVectorRetriever
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 import unstructured_pytesseract as pytesseract
 
+# # Provide path to Tesseract OCR (Windows only)
+# pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
+
+# Tesseract OCR - Homebrew (Mac OS only)
+# pytesseract.pytesseract.tesseract_cmd = "/opt/homebrew/bin/tesseract"
+
 # Load env variables
 load_dotenv()
-
-
-# logging.basicConfig(level = logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-# logger = logging.getLogger(__name__)
 
 # Logger configuration
 logger = logging.getLogger(__name__)
@@ -76,12 +78,13 @@ def get_password_hash(password: str) -> str:
     hash_hex = None
 
     # Convert secret_key, password to bytes for hashing
-     # Create HMAC hash object using secret key and password - Generate hex digest of the hash
+    # Create HMAC hash object using secret key and password - Generate hex digest of the hash
     try:
         secret_key = SECRET_KEY.encode()
         hash_object = hmac.new(secret_key, msg=password.encode(), digestmod=hashlib.sha256)
         hash_hex = hash_object.hexdigest()
         return hash_hex
+    
     except Exception as e:
         logger.info(f"FASTAPI Services Error - get_password_hash() - encountered an error: {e}")
 
@@ -113,6 +116,7 @@ def create_jwt_token(data: dict) -> dict[str, Any]:
 # Function to decode the JWT token and verify its validity
 def decode_jwt_token(token: str):
     logger.info(f"FASTAPI Services - decode_jwt_token() - Decode JWT token & Validation")
+    
     try:
         # Decode the JWT token
         decoded_token = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
@@ -131,6 +135,7 @@ def decode_jwt_token(token: str):
 def validate_token(token: str) -> bool:
     logger.info(f"FASTAPI Services - validate_token() - Validate if JWT token is valid")
     is_expired = True
+    
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
 
@@ -144,7 +149,7 @@ def validate_token(token: str) -> bool:
         logger.error(f"FASTAPI Services Error - validate_token() encountered an error: {e}") 
 
 # Token verification wrapper function
-async def verify_token(token: str = Depends(oauth2_scheme)) -> str:
+def verify_token(token: str = Depends(oauth2_scheme)) -> str:
     '''A wrapper to validate the tokens in the request headers'''
 
     if not token:
@@ -174,43 +179,11 @@ async def verify_token(token: str = Depends(oauth2_scheme)) -> str:
 
 # Helper function to verify passwords
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    
     logger.info(f"FASTAPI Services - verify_password() - Verifying passwords")
     rehashed_pass= get_password_hash(plain_password)
-    return rehashed_pass == hashed_password
-
-
-# Helper function to count tokens
-def count_tokens(text: str) -> int:
-    logger.info(f"FASTAPI Services - count_tokens() - Count token for GPT-4o model")
-    encoding = tiktoken.encoding_for_model("gpt-4o")
-    return len(encoding.encode(text))
-
-# Helper function to provide rectification strings
-def rectification_helper() -> str:
-    logger.info(f"FASTAPI Services - rectification_helper() - Adding prompt to generate correct answer")
-    return "The answer you provided is incorrect. I have attached the question and the steps to find the correct answer for the question. Please perform them and report the correct answer."
-
-
-# Helper function to generate response restriction
-def generate_restriction(final_answer: str) -> str:
-    logger.info(f"FASTAPI Services - generate_restriction() - Generating response restriction")
-    words = final_answer.split()
-    if len(words) <= 10:
-        return f"Restrict your response to {len(words)} words only. No yapping."
-    elif final_answer.replace(" ", "").isdigit():
-        return "Provide only numerical values in your response. No yapping."
-    else:
-        return "No yapping."
     
-# Helper function to check if object is json serializable
-def json_serial(obj):
-    logger.info(f"FASTAPI Services - json_serial() - JSON serializer for objects not serializable by default json code")
-    if isinstance(obj, datetime.datetime):
-        try:
-            return obj.isoformat()
-        except:
-            return str(obj)
-    return str(obj)
+    return rehashed_pass == hashed_password
 
 # Function to store the JWT token in the database
 def store_tokens(token: str) -> bool:
@@ -251,25 +224,24 @@ def store_tokens(token: str) -> bool:
             return token_saved
     
 # Helper function to check if user already exists
-def check_if_user_already_exists(email):
+def check_if_user_already_exists(email) -> JSONResponse | None | Any:
     logger.info(f"FASTAPI Services - check_if_user_already_exists() - Checking if the user with email id already exists")
     conn = create_connection_to_snowflake()
 
     if conn is None:
         return JSONResponse({
-            'status': status.HTTP_503_SERVICE_UNAVAILABLE,
-            'type': 'string',
-            'message': 'Database not found'
+            'status'    : status.HTTP_503_SERVICE_UNAVAILABLE,
+            'type'      : 'string',
+            'message'   : 'Database not found'
         })
     
     if conn:
         logger.info(f"FASTAPI Services - check_if_user_already_exists() - Database connection successful")
         cursor = conn.cursor()
+        
         try:
             logger.info(f"FASTAPI Services - SQL - check_if_user_already_exists() - Executing SELECT statement")
-            query = """
-            SELECT * FROM users WHERE email = %s;
-            """
+            query = """SELECT * FROM users WHERE email = %s;"""
             cursor.execute(query, (email,))
             logger.info(f"FASTAPI Services - SQL - check_if_user_already_exists() - SELECT statement executed successfully")
 
@@ -280,16 +252,18 @@ def check_if_user_already_exists(email):
                 close_connection(conn, cursor)
                 logger.info(f"FASTAPI Services - Database - check_if_user_already_exists() - Connection to DB closed")
                 return None
+            
             else:
                 logger.info(f"FASTAPI Services - Database - check_if_user_already_exists() - User already exists with details {db_user}")
                 return db_user
         
         except Exception as e:
             logger.error(f"FASTAPI Services Error - check_if_user_already_exists() encountered an error: {e}")  
+    
     return None
 
 # Helper function to Register New User
-def register_user(first_name, last_name, phone, email, password):
+def register_user(first_name, last_name, phone, email, password) -> JSONResponse:
     logger.info(f"FASTAPI Services - register_user() - Registering User data into the database")
     conn = create_connection_to_snowflake()
 
@@ -303,6 +277,7 @@ def register_user(first_name, last_name, phone, email, password):
     if conn:
         logger.info(f"FASTAPI Services - register_user() - Database connection successful")
         cursor = conn.cursor()
+        
         try:
             hashed_password = get_password_hash(password)
             logger.info(f"FASTAPI Services - SQL - register_user() - Executing INSERT statement")
@@ -331,10 +306,11 @@ def register_user(first_name, last_name, phone, email, password):
             if token_saved:
                 logger.info(f"FASTAPI Services - register_user() - JWT token created and stored")
                 response = {
-                    'status': status.HTTP_200_OK,
-                    'type'  : 'string',
-                    'message' : jwt_token
+                    'status'    : status.HTTP_200_OK,
+                    'type'      : 'string',
+                    'message'   : jwt_token
                 }
+            
             else:
                 logger.info(f"FASTAPI Services - register_user() - Failed to save JWT token to database")
                 response = {
@@ -347,10 +323,11 @@ def register_user(first_name, last_name, phone, email, password):
         except Exception as e:
             logger.error(f"FASTAPI Services Error - register_user() encountered an error: {e}")  
             response = {
-                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    'type': "string",
-                    "message": "New user could not be registered. Something went wrong.",
-                }
+                "status"    : status.HTTP_500_INTERNAL_SERVER_ERROR,
+                'type'      : "string",
+                "message"   : "New user could not be registered. Something went wrong.",
+            }
+        
         finally:
             close_connection(conn, cursor)
             logger.info(f"FASTAPI Services - register_user() - Database - Connection to the database was closed")
@@ -358,7 +335,7 @@ def register_user(first_name, last_name, phone, email, password):
         return JSONResponse(content = response)
     
 # Helper function to LogIn
-def login_user(db_user, email, password):
+def login_user(db_user, email, password) -> JSONResponse:
     logger.info(f"FASTAPI Services - login_user() - Logging In User")
     conn = create_connection_to_snowflake()
 
@@ -378,13 +355,13 @@ def login_user(db_user, email, password):
             if isinstance(db_user, tuple):
                 logger.info(f"FASTAPI Services - login_user() - db_user tuple converted to dictionary")
                 db_user = {
-                    'user_id': db_user[0],
+                    'user_id'   : db_user[0],
                     'first_name': db_user[1],
-                    'last_name': db_user[2],
-                    'phone': db_user[3],
-                    'email': db_user[4],
-                    'password': db_user[5],
-                    'jwt_token': db_user[6]
+                    'last_name' : db_user[2],
+                    'phone'     : db_user[3],
+                    'email'     : db_user[4],
+                    'password'  : db_user[5],
+                    'jwt_token' : db_user[6]
                 }
 
             if verify_password(password, db_user['password']):
@@ -425,9 +402,9 @@ def login_user(db_user, email, password):
         except Exception as e:
             logger.error(f"FASTAPI Services Error - login_user() encountered an error: {e}")  
             response = {
-                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    'type': "string",
-                    "message": "User could not be logged in. Something went wrong.",
+                    "status"    : status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    'type'      : "string",
+                    "message"   : "User could not be logged in. Something went wrong.",
                 }
 
         finally:
@@ -438,15 +415,15 @@ def login_user(db_user, email, password):
         return JSONResponse(content=response)
 
 # Helper function to get the list of documents
-def explore_documents(prompt_count):
+def explore_documents(prompt_count) -> JSONResponse:
     logger.info(f"FASTAPI Services - explore_documents() - Listing out the documents")
     conn = create_connection_to_snowflake()
 
     if conn is None:
         return JSONResponse({
-            'status': status.HTTP_503_SERVICE_UNAVAILABLE,
-            'type': 'string',
-            'message': 'Database not found'
+            'status'    : status.HTTP_503_SERVICE_UNAVAILABLE,
+            'type'      : 'string',
+            'message'   : 'Database not found'
         })
     
     if conn:
@@ -459,7 +436,7 @@ def explore_documents(prompt_count):
             """
             cursor.execute(query, (prompt_count,))
             rows = cursor.fetchall()
-            logger.info(f"FASTAPI Services - SQL - explore_documents() - Output - {rows}")
+            # logger.info(f"FASTAPI Services - SQL - explore_documents() - Output - {rows}")
 
             response = {
                     'status'    : status.HTTP_200_OK,
@@ -550,8 +527,8 @@ def download_files_from_s3(document_id):
     # Create S3 Client
     s3_client = boto3.client(
         's3',
-        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+        aws_access_key_id       = os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key   = os.getenv("AWS_SECRET_ACCESS_KEY")
     )
 
     logger.info(f"FASTAPI Services - download_files_from_s3() - S3 Client created")
@@ -563,6 +540,7 @@ def download_files_from_s3(document_id):
     # Checking if the document_id directory already exists
     if os.path.exists(local_dir) and os.listdir(local_dir):
         logger.info(f"FASTAPI Services - download_files_from_s3() - Local directory for {document_id} already exists and contains files. Skipping download.")
+        
         return JSONResponse({
             'status' : status.HTTP_200_OK,
             'type' : 'string',
@@ -580,31 +558,36 @@ def download_files_from_s3(document_id):
 
         if 'Contents' not in response:
             logger.info(f"FASTAPI Services - download_files_from_s3() - No files found in specified folder path: s3://{bucket_name}/{s3_folder_path}")
+            
             return JSONResponse({
                 'status' : 404,
                 'type'   : 'string',
                 'message' : 'No files found in the specified folder path'
             })
-         # s3://publications-info/document_id/
+        
+        # s3://publications-info/document_id/
         for obj in response['Contents']:
+            logger.info(f"FASTAPI Services - download_files_from_s3() - Downloading files")
+            
             file_key = obj['Key']
             file_name = os.path.join(local_dir, os.path.basename(file_key))
-            logger.info(f"FASTAPI Services - download_files_from_s3() - Downloading files")
+            
             s3_client.download_file(bucket_name, file_key, file_name)
             logger.info(f"FASTAPI Services - download_files_from_s3() - Downloaded {file_name}")
         
         return JSONResponse({
-            'status' : status.HTTP_200_OK,
-            'type' : 'string',
-            'message' : 'Files downloaded successfully'
+            'status'    : status.HTTP_200_OK,
+            'type'      : 'string',
+            'message'   : 'Files downloaded successfully'
         })
               
     except Exception as e:
         logger.error(f"FASTAPI Services Error - download_files_from_s3() encountered an error: {e}")
+        
         return JSONResponse({
-            'status' : status.HTTP_500_INTERNAL_SERVER_ERROR,
-            'type': 'string',
-            'message' : 'An error occured while downloading files from S3'
+            'status'    : status.HTTP_500_INTERNAL_SERVER_ERROR,
+            'type'      : 'string',
+            'message'   : 'An error occured while downloading files from S3'
         })
     
 # Helper function to extract text from PDF document
@@ -630,12 +613,15 @@ def extract_text_from_document(document_id):
     try:
         logger.info(f"FASTAPI Services - extract_text_from_document() - Extracting text from pdf file = {pdf_file}")
         text = ""
+        
         with open(pdf_file, 'rb') as file:
             reader = PyPDF2.PdfReader(file)
             for page in reader.pages:
                 text += page.extract_text()
+        
         print("Text extracted for the entire PDF")
         logger.info(f"FASTAPI Services - extract_text_from_document() - Text extracted for the entire PDF file = {pdf_file}")
+        
         return text.strip()
     
     except Exception as e:
@@ -652,21 +638,24 @@ def generate_summary(document_id):
     try:
         # Creating OpenAI client
         client = OpenAI(
-            base_url = os.getenv("NVIDIA_URL_SUMMARY"),
-            api_key = os.getenv("NVIDIA_API_KEY_SUMMARY")
+            base_url    = os.getenv("NVIDIA_URL_SUMMARY"),
+            api_key     = os.getenv("NVIDIA_API_KEY_SUMMARY")
         )
         logger.info(f"FASTAPI Services - generate_summary() - OpenAI Client created successfully")
 
-        message = [{'role': 'user', 'content' : f"Conclude the summary in 3-5 sensible complete sentences for text, no extra context needed: \n {text}"}]
+        message = [{
+            'role'      : 'user', 
+            'content'   : f"Conclude the summary in 3-5 sensible complete sentences for text, no extra context needed: \n {text}"
+        }]
         logger.info(f"FASTAPI Services - generate_summary() - Message/Prompt created successfully")
 
         completion = client.chat.completions.create(
-            model = "meta/llama-3.1-405b-instruct",
-            messages = message,
+            model       = "meta/llama-3.1-405b-instruct",
+            messages    = message,
             temperature = 0.2, 
-            top_p = 0.7,
-            max_tokens = 150,
-            stream = True
+            top_p       = 0.7,
+            max_tokens  = 150,
+            stream      = True
         )
         logger.info(f"FASTAPI Services - generate_summary() - NVIDIA model defined successfully")
 
@@ -675,25 +664,27 @@ def generate_summary(document_id):
             if chunk.choices[0].delta.content is not None:
                 logger.info(f"FASTAPI Services - generate_summary() - Collecting generated summary")
                 summary += chunk.choices[0].delta.content
+        
         logger.info(f"FASTAPI Services - generate_summary() - {document_id} - Summary generated successfully")
         return JSONResponse({
-            'status' : status.HTTP_200_OK,
-            'type' : 'text',
-            'message' : summary
+            'status'    : status.HTTP_200_OK,
+            'type'      : 'text',
+            'message'   : summary
         })
 
     except Exception as e:
         logger.error(f"FASTAPI Services Error - generate_summary() encountered an error: {e}")
         return JSONResponse({
-            'status' : status.HTTP_500_INTERNAL_SERVER_ERROR,
-            'type' : 'string',
-            'message' : 'Error while generating summary for the pdf document'
+            'status'    : status.HTTP_500_INTERNAL_SERVER_ERROR,
+            'type'      : 'string',
+            'message'   : 'Error while generating summary for the pdf document'
         })
 
 
 # Helper function to store the responses into the database
 def save_response_to_db(document_id, question, response, token):
     logger.info(f"FASTAPI Services - save_response_to_db() - Saving Research Notes to SnowFlake database")
+    
     token_payload = decode_jwt_token(token)
     user_id = token_payload['user_id']
     logger.info(f"FASTAPI Services - save_response_to_db() - User id = {user_id}")
@@ -701,9 +692,9 @@ def save_response_to_db(document_id, question, response, token):
 
     if conn is None:
         return JSONResponse({
-            'status': status.HTTP_503_SERVICE_UNAVAILABLE,
-            'type': 'string',
-            'message': 'Database not found'
+            'status'    : status.HTTP_503_SERVICE_UNAVAILABLE,
+            'type'      : 'string',
+            'message'   : 'Database not found'
         })
     
     if conn:
@@ -716,34 +707,32 @@ def save_response_to_db(document_id, question, response, token):
             cursor.execute(query)
             conn.commit()
             logger.info(f"FASTAPI Services - SQL - save_response_to_db() - INSERT statement executed successfully")
+            
             return JSONResponse({
-                'status': status.HTTP_200_OK,
-                'type'  : 'string',
-                'message' : 'Response stored to database successfully'
+                'status'    : status.HTTP_200_OK,
+                'type'      : 'string',
+                'message'   : 'Response stored to database successfully'
             })
+        
         except Exception as e:
             logger.error(f"FASTAPI Services Error - save_response_to_db() encountered an error: {e}")  
             response = {
-                    "status": status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    'type': "string",
-                    "message": "Error while saving responses to Database",
-                }
+                "status"    : status.HTTP_500_INTERNAL_SERVER_ERROR,
+                'type'      : "string",
+                "message"   : "Error while saving responses to Database",
+            }
+        
         finally:
             close_connection(conn, cursor)
             logger.info(f"FASTAPI Services - save_response_to_db() - Database - Connection to the database was closed")
-
-
-# # Provide path to Tesseract OCR (Windows only)
-# pytesseract.pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
-
-# Tesseract OCR - Homebrew
-# pytesseract.pytesseract.tesseract_cmd = "/opt/homebrew/bin/tesseract"
 
 
 # ============================== Handling Text based content ==============================
 
 def extract_pdf_elements(fpath, fname):
     """ Extract images, tables, and chunk text from a PDF file """
+    
+    logger.info(f"FASTAPI Services - extract_pdf_elements() - Extracting contents from document {fname}")
     
     return partition_pdf(
         filename                        = os.path.join(fpath, fname),
@@ -760,6 +749,8 @@ def extract_pdf_elements(fpath, fname):
 
 def categorize_elements(raw_pdf_elements):
     """ Categorize extracted elements from a PDF into tables and texts """
+
+    logger.info(f"FASTAPI Services - categorize_elements() - Categorizing contents into tables, images, and text")
     
     tables = []
     texts = []
@@ -786,6 +777,9 @@ def preprocess_text(raw_text):
 
 
 def chunk_pdf(fpath, fname):
+    """ Break down PDF contents into fixed sized chunks """
+
+    logger.info(f"FASTAPI Services - chunk_pdf() - Chunking document {fname}")
     
     # Get elements
     raw_pdf_elements = extract_pdf_elements(fpath, fname)
@@ -815,6 +809,8 @@ def chunk_pdf(fpath, fname):
 def generate_text_summaries(texts, tables, summarize_texts=False):
     """ Summarize text elements if needed """
 
+    logger.info(f"FASTAPI Services - generate_text_summaries() - Attempting to generate summaries for text")
+
     # Define the prompt message for summarizing the text
     prompt_text = """You are an assistant tasked with summarizing tables and text for retrieval via RAGs. \
     These summaries will be embedded and used to retrieve the raw text or table elements. \
@@ -826,7 +822,7 @@ def generate_text_summaries(texts, tables, summarize_texts=False):
     model = ChatOpenAI(
         temperature     = 0, 
         model           = "gpt-4o",
-        api_key         = os.getenv("OPEN_AI_API")
+        api_key         = os.getenv("OPENAI_API")
     )
     summarize_chain = {"element": lambda x: x} | prompt | model | StrOutputParser()
 
@@ -858,11 +854,13 @@ def encode_image(image_path):
 
 def image_summarize(img_base64, prompt):
     """ Ask the LLM to generate a summary of the image """
+
+    logger.info(f"FASTAPI Services - image_summarize() - Summarizing images")    
     
     chat = ChatOpenAI(
         model       = "gpt-4o", 
         max_tokens  = 1024,
-        api_key     = os.getenv("OPEN_AI_API")
+        api_key     = os.getenv("OPENAI_API")
     )
 
     msg = chat.invoke(
@@ -886,6 +884,8 @@ def image_summarize(img_base64, prompt):
 
 def generate_img_summaries(path):
     """ Generate summaries and base64 encoded strings for images """
+
+    logger.info(f"FASTAPI Services - generate_img_summaries() - Attempting to generate summaries for images")
 
     # Store base64 encoded images
     img_base64_list = []
@@ -912,6 +912,9 @@ def generate_img_summaries(path):
     return img_base64_list, image_summaries
 
 def save_preprocessed_context(fpath, json_file, texts, text_summaries, tables, table_summaries, img_base64_list, image_summaries):
+    """ Save preprocessed PDF contents locally"""
+
+    logger.info(f"FASTAPI Services - save_preprocessed_context() - Saving preprocessed contents")
 
     texts_uuid_list  = [str(uuid.uuid4()) for _ in texts]
     tables_uuid_list = [str(uuid.uuid4()) for _ in tables]
@@ -947,6 +950,8 @@ def create_multi_vector_retriever(
     images_uuid_list
 ):
     """ Create retriever that indexes summaries, but returns raw images or texts """
+
+    logger.info(f"FASTAPI Services - create_multi_vector_retriever() - Creating a MultiVector Retriever")
 
     # Initialize the storage layer
     store = InMemoryStore()
@@ -998,6 +1003,8 @@ def create_multi_vector_retriever(
 
 def save_report_vectorstore(report_vectorstore, response):
     """ Add the report response to vectorstore if prompt_type is 'report' """
+
+    logger.info(f"FASTAPI Services - save_report_vectorstore() - Saving embeddings to report vector store")
     
     report_doc = Document(
         page_content = response,
@@ -1011,6 +1018,8 @@ def save_report_vectorstore(report_vectorstore, response):
 
 def create_report_retriever(report_vectorstore):
     """ Create a retriever for the vectorstore """
+
+    logger.info(f"FASTAPI Services - create_report_retriever() - Creating a retriever for report vector store")
 
     return report_vectorstore.as_retriever(
         search_type     = "similarity",
@@ -1093,6 +1102,8 @@ def split_image_text_types(docs):
 
 def img_prompt_func(data_dict, prompt_type = "default"):
     """ Join the context into a single string with configurable prompt type """
+
+    logger.info(f"FASTAPI Services - img_prompt_func() - Preparing prompts for our LLM")
     
     formatted_texts = "\n".join(data_dict["context"]["texts"])
     messages = []
@@ -1145,13 +1156,15 @@ def img_prompt_func(data_dict, prompt_type = "default"):
 
 def multi_modal_rag_chain(retriever, prompt_type = "default", max_tokens = 1024):
     """ Multi-modal RAG chain with configurable prompt type """
+
+    logger.info(f"FASTAPI Services - multi_modal_rag_chain() - Setting up the RAG chain")
     
     # Use GPT-4o as the LLM
     model = ChatOpenAI(
         temperature = 0, 
         model       = "gpt-4o", 
         max_tokens  = max_tokens,
-        api_key     = os.getenv("OPEN_AI_API")
+        api_key     = os.getenv("OPENAI_API")
     )
 
     # model = ChatNVIDIA(
@@ -1179,6 +1192,8 @@ def multi_modal_rag_chain(retriever, prompt_type = "default", max_tokens = 1024)
 
 
 def invoke_pipeline(document_id, question, prompt_type, source, token):
+
+    logger.info(f"FASTAPI Services - img_prompt_func() - Initiating RAG pipeline")
 
     # Find the PDF document in the directory of document_id
     fpath = os.path.join(os.getcwd(), os.getenv("DOWNLOAD_DIRECTORY", "downloads") , document_id)
@@ -1254,7 +1269,7 @@ def invoke_pipeline(document_id, question, prompt_type, source, token):
         collection_name     = full_text_collection_name, 
         embedding_function  = OpenAIEmbeddings(
             model   = "text-embedding-3-large",
-            api_key = os.getenv("OPEN_AI_API")
+            api_key = os.getenv("OPENAI_API")
         ),
         persist_directory   = full_text_persistent_directory
     )
@@ -1264,7 +1279,7 @@ def invoke_pipeline(document_id, question, prompt_type, source, token):
         collection_name     = report_collection_name, 
         embedding_function  = OpenAIEmbeddings(
             model   = "text-embedding-3-large",
-            api_key = os.getenv("OPEN_AI_API")
+            api_key = os.getenv("OPENAI_API")
         ),
         persist_directory   = report_persistent_directory
     )
