@@ -15,7 +15,7 @@ Demo Link: https://youtu.be/TCs0_5oaGkE
 
 Name  | Contribution 
 --- | --- |
-Sandeep Suresh Kumar | Scraping, RAG Implementation, Report Generation, Research Notes
+Sandeep Kumar | Scraping, RAG Implementation, Report Generation, Research Notes
 Deepthi Nasika       | FastAPI, Summary Generation, Streamlit, Deployment
 Gomathy Selvamuthiah | Snowflake Database, AirFlow, Streamlit, Documentation
 Ramy Solanki         | JWT, Amazon S3, Dockerization, Documentation
