@@ -3,39 +3,25 @@
 An interactive RAG based application built using FastAPI and Streamlit to explore and analyze publications from the CFA Institute Research Foundation. The application extract contents from the publications including images, graphs, PDF files and stores them in Snowflake database and Chroma DB. Users can interactively explore documents, generate on-the-fly summaries, and retrieve insights using multi-modal Retrieval-Augmented Generation (RAG) approach. This application supports Q/A functionality, incremental indexing of research notes, and comprehensive search within documents enhancing document discovery and analysis.
 
 
-## Live Application Link
-- Streamlit application link: http://18.219.124.78:8501/
-- FastAPI: http://18.219.124.78:8000/health
-
 ## Codelabs Link
 Codelabs documentation link: https://codelabs-preview.appspot.com/?file_id=1bqlMWizDFQHl4ucXhfDf2G6EH_YXzS_qWhY8qBONL2w#0
-## **Video of Submission**
-Demo Link: https://youtu.be/TCs0_5oaGkE
 
-
-Name  | Contribution 
---- | --- |
-Sandeep Kumar | Scraping, RAG Implementation, Report Generation, Research Notes
-Deepthi Nasika       | FastAPI, Summary Generation, Streamlit, Deployment
-Gomathy Selvamuthiah | Snowflake Database, AirFlow, Streamlit, Documentation
-Ramy Solanki         | JWT, Amazon S3, Dockerization, Documentation
 
 ## Problem Statement
 With the rapid growth of publications, it has become increasingly challenging to analyze complex documents, interpret images and graphs, and derive meaningful business insights. This project aims to create a robust solution that allows users to interact with documents through Q&A functionality. By leveraging Retrieval-Augmented Generation (RAG), the application provides relevant responses, images, and graphs specific to user questions, simplifying the analysis process and enabling users to obtain accurate insights efficiently. The application primarily focuses on:
 
-1. Content Extraction and Storage: Scrape content from the CFA Institute Research Foundation website, loading files onto S3 and storing textual data, such as titles and summaries, in a Snowflake database.
-2. Automated Data Ingestion: Automate the data ingestion process with an Airflow pipeline, ensuring efficient and structured data handling.
-3. API Endpoints: Develop multiple API endpoints to support services like document exploration and dropdown selection for document access, RAG interaction with UI.
-4. Real-Time Summary Generation: Generate document summaries on the fly using NVIDIA’s advanced services.
-5. Multi-Modal RAG with Cleanlabs Integration: Implement multi-modal RAG to enhance response relevance and integrate Cleanlabs for response trustworthiness.
-6. Comprehensive Report Generation: Create reports that include responses, images, and graphs relevant to user queries for a richer understanding.
-7. Research Notes Validation and Indexing: Validate, store, and incrementally index research notes to facilitate efficient future searches and analysis.
+1. **Content Extraction and Storage:** Extract content from the CFA Institute Research Foundation website, loading files onto S3 and storing textual data, such as titles and summaries, in a Snowflake database.
+2. **Automated Data Ingestion:** Automate the data ingestion process with an Airflow pipeline, ensuring efficient and structured data handling.
+3. **API Endpoints:** Develop multiple API endpoints to support services like document exploration and dropdown selection for document access, RAG interaction with UI.
+4. **Real-Time Summary Generation:** Generate document summaries on the fly using NVIDIA’s advanced services.
+5. **Multi-Modal RAG with Cleanlabs Integration:** Implement multi-modal RAG to enhance response relevance and integrate Cleanlabs for response trustworthiness.
+6. **Comprehensive Report Generation:** Create reports that include responses, images, and graphs relevant to user queries for a richer understanding.
+7. **Research Notes Validation and Indexing:** Validate, store, and incrementally index research notes to facilitate efficient future searches and analysis.
 
 
 ## Architecture Diagram
 ### 1. Core Application Pipeline
 ![Architecture Diagram](https://github.com/kumarsandeep567/Chat-with-PDF-Multimodal-RAG/blob/main/diagram/core_application_pipeline.png)
-
 
 
 ### 2. Airflow Pipeline
@@ -128,9 +114,6 @@ FastAPI ensures that every response is returned in a consistent JSON format with
 ## Data Source
 1. CFA Institute Research Foundation Publications: https://rpc.cfainstitute.org/en/research-foundation/publications#sort=%40officialz32xdate%20descending&f:SeriesContent=%5BResearch%20Foundation%5D
 
-## Amazon S3 Link
-- s3://publications-info/{document_id}
-
 
 ## Technologies
 [![BeautifulSoup](https://img.shields.io/badge/BeautifulSoup-FFD43B?style=for-the-badge&logo=python&logoColor=white)](https://www.crummy.com/software/BeautifulSoup/)
@@ -151,36 +134,22 @@ FastAPI ensures that every response is returned in a consistent JSON format with
 
 ## Prerequisites
 Software Installations required for the project
-1. Python Environment
-A Python environment allows you to create isolated spaces for your Python projects, managing dependencies and versions separately
+1. **Python Environment**
+A Python environment allows you to create isolated spaces for your Python projects, managing dependencies and versions separately.
 
-2. Poetry Environment/ Python Virtual Environment
-- Poetry is a dependency management tool that helps you manage your Python packages and projects efficiently where a user can install all the dependencies onto pyproject.toml file
-- Python Virtual Environment helps you manage your Python packages efficiently where a user can include all the dependencies in requirements.txt file
+2. **Packages**
+Please install the required packages via `pip`:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Docker**
+ Docker allows you to package applications and their dependencies into containers, ensuring consistent environments across different platforms. Please see the below section on how to install Docker.
 
-4. Packages
-The project requires multiple packages for loading environment variables: python-dotenv, for loading files from hugging face: huggingface-hub, for connecting to MySQL database: mysql-connector-python, for file storage: google-cloud-storage, for extracting PDF contents from Azure AI Document Intelligence tool: azure-ai-formrecognizer, for extracting PDF contents from Adobe PDF Extract pdfservices-sdk, for extracting PDF contents with open source tool: pymupdf
-```bash
-pip install -r requirements.txt
-```
-
-4. Visual Studio Code
-An integrated development environment (IDE) that provides tools and features for coding, debugging, and version control.
-
-5. Docker
- Docker allows you to package applications and their dependencies into containers, ensuring consistent environments across different platforms. All the dependencies will be installed on docker-compose.yaml file with env file
-
-6. Amazon S3 Bucket
+4. **Amazon S3 Bucket**
 Amazon S3 (Simple Storage Service) is a cloud storage solution from AWS used to store files and objects. It provides scalable, secure, and cost-effective storage for all extracted publication files, including images, PDFs, and JSON data, organized under unique document IDs. This bucket serves as the primary cloud storage for file data accessible by the application.
 
-8. Streamlit
-Streamlit is an open-source app framework that allows you to create interactive web applications easily.
-
-9. Snowflake Database
+5. **Snowflake**
 Snowflake is a cloud-based data warehousing and analytics service that supports structured data storage. This project uses Snowflake to store extracted textual data, such as titles, summaries, cover image URLs, and PDF URLs from CFA publications. Snowflake also hosts user data and stores responses to user queries, enabling efficient querying and data retrieval.
-
-10. ChromaDB Vector Database
-ChromaDB is a specialized vector database used for storing vector embeddings of processed document contents, such as text chunks and image embeddings in base64 format. It enables efficient retrieval by calculating cosine similarity between user query embeddings and stored content embeddings, ensuring relevant document content is retrieved quickly and accurately for user queries.
 
 
 ## Project Structure
@@ -260,7 +229,22 @@ Assignment3/
    git clone https://github.com/BigDataIA-Fall2024-TeamB6/Assignment3
    ```
 
-2. **Install Docker**: Install docker and `docker compose` to run the application:
+2. **Get your API Key**: Please get your API keys from the following vendors:
+   - OpenAI: [https://openai.com/api/](https://openai.com/api/)
+   - Cleanlabs: [https://app.cleanlab.ai/account](https://app.cleanlab.ai/account)
+   - LangSmith: [https://smith.langchain.com/settings](https://smith.langchain.com/settings)
+   - Nvidia Developer API: [https://build.nvidia.com/meta/llama-3_1-405b-instruct?snippet_tab=Python](https://build.nvidia.com/meta/llama-3_1-405b-instruct?snippet_tab=Python)
+
+3. **Create your account**: Please create an account on these services and record your access keys:
+
+   - Snowflake: [https://www.snowflake.com/en/data-cloud/pricing-options/](https://www.snowflake.com/en/data-cloud/pricing-options/)
+   - Amazon Web Services: [https://aws.amazon.com/](https://aws.amazon.com/)
+
+4. **Provide your API and Access keys**:
+   - Make a copy of the `.env.example` file and rename it to `.env` (Do this for airflow, fastapi, and streamlit directories)
+   - Provide your access or API keys for the respective service
+
+5. **Install Docker**: Install docker and `docker compose` to run the application:
 
    - For Windows, Mac OS, simply download and install Docker Desktop from the official website to install docker and `docker compose` 
    [Download Docker Desktop](https://www.docker.com/products/docker-desktop/)
@@ -287,13 +271,23 @@ Assignment3/
    # Check to see if docker is running 
    sudo docker run hello-world
 
-3. **Run the application:** In the terminal within the directory, run 
+6. **Run the application:** In the terminal within the directory, run 
    ```bash
    docker-compose up
 
    # To run with logging disabled, 
    docker-compose up -d
 
-4. In the browser, 
+7. In the browser, 
    - visit `localhost:8501` to view the Streamlit application
    - visit `localhost:8000/docs` to view the FastAPI endpoint docs
+
+## Contributors
+- This project was made possible by the following contributors:
+
+Name  | Contribution 
+---   | --- |
+Sandeep Kumar                                                                 | Scraping, RAG Implementation, Report Generation, Research Notes
+Deepthi Nasika [(View Profile)](https://github.com/Deepthi-Nasika)            | FastAPI, Summary Generation, Streamlit, Deployment
+Gomathy Selvamuthiah [(View Profile)](https://github.com/GomathySelvamuthiah) | Snowflake Database, AirFlow, Streamlit, Documentation
+Ramy Solanki [(View Profile)](https://github.com/solankiram2023)              | JWT, Amazon S3, Dockerization, Documentation
