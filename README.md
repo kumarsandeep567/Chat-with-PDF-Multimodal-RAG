@@ -132,25 +132,18 @@ FastAPI ensures that every response is returned in a consistent JSON format with
 [![Chroma DB](https://img.shields.io/badge/Chroma%20DB-FF5A5F?style=for-the-badge&logo=chromadb&logoColor=white)](https://www.trychroma.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 
-## Prerequisites
-Software Installations required for the project
-1. **Python Environment**
-A Python environment allows you to create isolated spaces for your Python projects, managing dependencies and versions separately.
-
-2. **Packages**
-Please install the required packages via `pip`:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Docker**
- Docker allows you to package applications and their dependencies into containers, ensuring consistent environments across different platforms. Please see the below section on how to install Docker.
-
-4. **Amazon S3 Bucket**
-Amazon S3 (Simple Storage Service) is a cloud storage solution from AWS used to store files and objects. It provides scalable, secure, and cost-effective storage for all extracted publication files, including images, PDFs, and JSON data, organized under unique document IDs. This bucket serves as the primary cloud storage for file data accessible by the application.
-
-5. **Snowflake**
-Snowflake is a cloud-based data warehousing and analytics service that supports structured data storage. This project uses Snowflake to store extracted textual data, such as titles, summaries, cover image URLs, and PDF URLs from CFA publications. Snowflake also hosts user data and stores responses to user queries, enabling efficient querying and data retrieval.
-
+## Screenshots
+- Landing Page
+  ![Landing Page](https://github.com/kumarsandeep567/Chat-with-PDF-Multimodal-RAG/blob/main/screenshots/Landing.png)
+- Explore Page
+  ![Explore Page](https://github.com/kumarsandeep567/Chat-with-PDF-Multimodal-RAG/blob/main/screenshots/Explore.png)
+- Summary Page
+  ![Summary Page](https://github.com/kumarsandeep567/Chat-with-PDF-Multimodal-RAG/blob/main/screenshots/Summary.png)
+- Chat with PDF
+  ![Chatbot 1](https://github.com/kumarsandeep567/Chat-with-PDF-Multimodal-RAG/blob/main/screenshots/chatbot1.png)
+  ![Chatbot 3](https://github.com/kumarsandeep567/Chat-with-PDF-Multimodal-RAG/blob/main/screenshots/chatbot3.png)
+  ![Chatbot 4](https://github.com/kumarsandeep567/Chat-with-PDF-Multimodal-RAG/blob/main/screenshots/chatbot4.png)
+  ![Chatbot 5](https://github.com/kumarsandeep567/Chat-with-PDF-Multimodal-RAG/blob/main/screenshots/chatbot5.png)
 
 ## Project Structure
 ```
@@ -219,8 +212,27 @@ Assignment3/
     ├── registerpage.py
     ├── requirements.txt
     └── summary.py
-
 ```
+
+## Prerequisites
+Software Installations required for the project
+1. **Python Environment**
+A Python environment allows you to create isolated spaces for your Python projects, managing dependencies and versions separately.
+
+2. **Packages**
+Please install the required packages via `pip`:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. **Docker**
+ Docker allows you to package applications and their dependencies into containers, ensuring consistent environments across different platforms. Please see the below section on how to install Docker.
+
+4. **Amazon S3 Bucket**
+Amazon S3 (Simple Storage Service) is a cloud storage solution from AWS used to store files and objects. It provides scalable, secure, and cost-effective storage for all extracted publication files, including images, PDFs, and JSON data, organized under unique document IDs. This bucket serves as the primary cloud storage for file data accessible by the application.
+
+5. **Snowflake**
+Snowflake is a cloud-based data warehousing and analytics service that supports structured data storage. This project uses Snowflake to store extracted textual data, such as titles, summaries, cover image URLs, and PDF URLs from CFA publications. Snowflake also hosts user data and stores responses to user queries, enabling efficient querying and data retrieval.
+
 
 ## How to run the application locally
 1. **Clone the Repository**: Clone the repository onto your local machine and navigate to the directory within your terminal.
